@@ -1,13 +1,10 @@
-/* Complex animations will go here */
-/* For now, style.css handles the basics */
-
 @keyframes float {
     0% {
         transform: translateY(0px);
     }
 
     50% {
-        transform: translateY(-20px);
+        transform: translateY(-12px);
     }
 
     100% {
@@ -16,5 +13,27 @@
 }
 
 .floating {
-    animation: float 6s ease-in-out infinite;
+    animation: float 5s ease-in-out infinite;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(26px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
 }

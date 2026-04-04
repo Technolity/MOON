@@ -46,6 +46,7 @@ class StorytellingEngine {
             this.canvas.width = rect.width * dpr;
             this.canvas.height = rect.height * dpr;
 
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
             this.ctx.scale(dpr, dpr);
             this.canvas.style.width = rect.width + 'px';
             this.canvas.style.height = rect.height + 'px';

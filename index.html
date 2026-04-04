@@ -4,263 +4,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOON | Varmul</title>
+    <meta name="description"
+        content="MOON brings cinematic wellness commerce to life with Kashmiri saffron, Sidr honey, and Himalayan shilajit.">
+    <title>MOON | Cinematic Wellness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syncopate:wght@400;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/storytelling.css">
 </head>
 
-<body>
-    <div id="app">
-        <!-- Navigation: RAW Style (Logo Left, Links Center, pill button right) -->
-        <nav class="navbar">
-            <div class="logo">
-                <span class="logo-icon">🌙</span>
-                <!-- Placeholder icon to match the bolt in RAW, changing to Moon logic in CSS -->
-                <span class="logo-text">MOON.</span>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#hero">Home</a></li>
-                <li><a href="#story">Our Story</a></li>
-                <li><a href="#benefits">Health Benefits</a></li>
+<body data-theme="saffron">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <nav class="navbar" id="navbar">
+        <div class="navbar-content">
+            <a href="#hero" class="logo" aria-label="Moon home">
+                <span class="logo-mark">M</span>
+                <span class="logo-text">MOON</span>
+            </a>
+
+            <ul class="nav-links" aria-label="Main Navigation">
+                <li><a href="#showcase">Showcase</a></li>
+                <li><a href="#details">Featured</a></li>
                 <li><a href="#shop">Shop</a></li>
-                <li><a href="#contact">Contact Us</a></li>
+                <li><a href="#newsletter">Newsletter</a></li>
             </ul>
+
             <div class="nav-actions">
-                <button class="order-btn" id="cart-btn">Cart (0)</button>
+                <button class="icon-btn" type="button" aria-label="Search (Ctrl+K)">S</button>
+                <button class="icon-btn cart-btn" type="button" id="cart-btn" aria-label="Open cart">
+                    <span>Cart</span>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </button>
+                <button class="icon-btn" type="button" aria-label="User account">U</button>
             </div>
-        </nav>
+        </div>
+    </nav>
 
-        <!-- Hero Section with Full-Screen Storytelling -->
+    <main id="main-content">
         <header id="hero" class="hero-section">
-            <!-- Full-Screen Storytelling Canvas Background -->
-            <canvas id="story-frame-canvas" class="fullscreen-canvas"></canvas>
+            <canvas id="story-frame-canvas" class="fullscreen-canvas" aria-hidden="true"></canvas>
+            <div class="hero-overlay" aria-hidden="true"></div>
 
-            <!-- Central Product Visual (For Saffron/Shilajit) -->
+            <div class="hero-content">
+                <p class="hero-kicker">Cinematic Wellness Commerce</p>
+                <h1 class="big-title" id="hero-title">Red Jewel.</h1>
+                <p class="sub-title" id="hero-subtitle">The world's most precious spice.</p>
+
+                <div class="hero-controls" aria-label="Product Navigation">
+                    <button class="nav-arrow" id="prev-btn" type="button" aria-label="Previous product">&lt;</button>
+                    <div class="pill-container" role="tablist" aria-label="Select product story">
+                        <button class="pill-btn active" data-product="saffron" type="button" role="tab"
+                            aria-selected="true">Kashmiri Saffron</button>
+                        <button class="pill-btn" data-product="honey" type="button" role="tab"
+                            aria-selected="false">Sidr Honey</button>
+                        <button class="pill-btn" data-product="shilajit" type="button" role="tab"
+                            aria-selected="false">Pure Shilajit</button>
+                    </div>
+                    <button class="nav-arrow" id="next-btn" type="button" aria-label="Next product">&gt;</button>
+                </div>
+            </div>
+
             <div class="hero-visual" id="hero-visual-container">
-                <div class="product-container" id="hero-image">
-                    <!-- Original visuals will be injected here -->
-                </div>
-            </div>
-
-            <!-- Text Overlay (Split Sides) -->
-            <div class="hero-text-layer">
-                <h1 class="big-title" id="hero-title">Liquid Gold.</h1>
-                <p class="sub-title" id="hero-subtitle">Vitamin-packed purity from the Sidr valleys.</p>
-            </div>
-
-            <!-- Bottom Pill Navigation -->
-            <div class="bottom-nav">
-                <div class="pill-container">
-                    <button class="pill-btn active" data-product="saffron">Kashmiri Saffron</button>
-                    <button class="pill-btn" data-product="honey">Sidr Honey</button>
-                    <button class="pill-btn" data-product="shilajit">Pure Shilajit</button>
-                    <div class="pill-indicator"></div>
-                </div>
+                <div class="product-container" id="hero-image"></div>
             </div>
         </header>
 
-        <!-- Details Section (Product specific) -->
-        <section id="details" class="details-section">
-            <div class="container split-layout">
-                <div class="text-side">
-                    <h2 class="section-heading" id="detail-title">The King of Healers</h2>
-                    <div class="divider"></div>
+        <section id="showcase" class="editorial-showcase section-padding">
+            <article class="showcase-featured reveal">
+                <img src="moon2222/ezgif-frame-097.jpg" alt="Saffron threads in cinematic lighting">
+                <div class="showcase-copy">
+                    <p class="label">Featured Story</p>
+                    <h2 id="feature-product-name">Kashmiri Saffron</h2>
+                    <p id="feature-product-desc">Hand-selected Mongra threads from Pampore's autumn harvest.</p>
+                </div>
+            </article>
+
+            <article class="showcase-card reveal">
+                <img src="ezgif-2fae6b36993927b6-jpg/ezgif-frame-072.jpg" alt="Sidr honey macro texture">
+                <div class="showcase-card-copy">
+                    <p class="label">Raw Reserve</p>
+                    <h3>Sidr Honey</h3>
+                </div>
+            </article>
+
+            <article class="showcase-card reveal">
+                <img src="moon333/ezgif-frame-090.jpg" alt="Shilajit resin close-up">
+                <div class="showcase-card-copy">
+                    <p class="label">Mineral Ritual</p>
+                    <h3>Pure Shilajit</h3>
+                </div>
+            </article>
+
+            <article class="showcase-card reveal">
+                <img src="moon2222/ezgif-frame-146.jpg" alt="Saffron ingredient composition">
+                <div class="showcase-card-copy">
+                    <p class="label">Editorial Drop</p>
+                    <h3>Crafted for Daily Performance</h3>
+                </div>
+            </article>
+        </section>
+
+        <section id="details" class="details-section section-padding">
+            <div class="details-grid">
+                <div class="text-side reveal">
+                    <p class="label">Current Selection</p>
+                    <h2 class="section-heading" id="detail-title">Red Jewel.</h2>
                     <p class="body-text" id="detail-desc">
-                        Our Sidr Honey is harvested from the sacred Lote trees of Yemen. Known for their potent
-                        antimicrobial properties and rich, caramel-like taste, this raw honey is cold-pressed to
-                        preserve every enzyme. It's not just sweetener; it's a liquid gold remedy.
+                        Hand-picked from the autumn fields of Pampore. Each strand is a testament to patience and
+                        purity, bringing vibrant color and aroma.
                     </p>
-                    <div class="price-tag" id="detail-price">₹1500</div>
-                    <button class="purchase-btn">Add to Cart</button>
-                </div>
-                <div class="card-side">
-                    <div class="info-card">
-                        <span class="card-label">NUTRITION DETAILS</span>
-                        <!-- Content injected via JS -->
-                        <div class="card-content" id="detail-card-content">
-                            High in Antioxidants<br>Raw & Unfiltered
-                        </div>
+                    <div class="details-footer">
+                        <span class="price-tag" id="detail-price">₹850</span>
+                        <button class="purchase-btn btn-primary" type="button">Add to Cart</button>
                     </div>
+                </div>
+
+                <aside class="info-card reveal" aria-label="Nutrition details">
+                    <span class="card-label">NUTRITION DETAILS</span>
+                    <div class="card-content" id="detail-card-content">Mongra A++<br>Deep Red Stigmas</div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="scrolling-banner reveal" aria-label="Collection banner">
+            <div class="banner-background">
+                <img src="moon333/ezgif-frame-140.jpg" alt="Mountain landscape backdrop">
+            </div>
+            <div class="banner-overlay"></div>
+            <div class="banner-marquee" aria-hidden="true">
+                <div class="marquee-track">
+                    <span>MOON RITUALS | PROPHETIC WELLNESS | PURE ORIGINS |</span>
+                    <span>MOON RITUALS | PROPHETIC WELLNESS | PURE ORIGINS |</span>
                 </div>
             </div>
         </section>
 
-        <!-- Brand Story Section -->
-        <section id="story" class="story-section">
-            <div class="container">
-                <h2 class="section-heading text-center">Our Story</h2>
-                <div class="story-content">
-                    <p class="story-text">
-                        MOON is where ancient tradition meets modern purity. Born from a desire to revive the prophetic
-                        way of living, we travel across valleys and mountains—from the saffron fields of Pampore to the
-                        Sidr forests of Yemen—to bring you nature’s most potent healers.
-                    </p>
-                    <p class="story-text">
-                        We don't just sell products; we deliver a legacy of wellness. Every jar, every strand, every
-                        resin is 100% organic, ethically sourced, and packed with the raw power of nature.
-                    </p>
-                </div>
+        <section id="shop" class="shop-section section-padding">
+            <div class="section-head reveal">
+                <p class="label">Shop</p>
+                <h2 class="section-heading">Modular Product Grid</h2>
             </div>
-        </section>
 
-        <!-- Health Benefits Section -->
-        <section id="benefits" class="benefits-section">
-            <div class="container">
-                <h2 class="section-heading text-center">Prophetic Medicine</h2>
-                <div class="benefits-grid">
-                    <div class="benefit-card">
-                        <h3>Sidr Honey</h3>
-                        <p class="quote">"There emerges from their bellies a drink, varying in colors, in which there is
-                            healing for people."</p>
-                        <span class="ref">— Quran 16:69</span>
-                    </div>
-                    <div class="benefit-card">
-                        <h3>Ajwa Dates</h3>
-                        <p class="quote">"He who eats seven Ajwa dates every morning, will not be affected by poison or
-                            magic on that day."</p>
-                        <span class="ref">— Sahih al-Bukhari</span>
-                    </div>
-                    <div class="benefit-card">
+            <div class="product-grid">
+                <article class="product-card featured reveal">
+                    <div class="card-image"><img src="moon2222/ezgif-frame-120.jpg" alt="Premium saffron"></div>
+                    <div class="card-details">
                         <h3>Kashmiri Saffron</h3>
-                        <p class="quote">"Use saffron, for it brightens the heart and increases its strength."</p>
-                        <span class="ref">— Traditional Wisdom</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Shop Section -->
-        <section id="shop" class="shop-section">
-            <div class="container">
-                <h2 class="section-heading text-center">The Collection</h2>
-                <div class="product-grid">
-                    <!-- Product 1: Saffron -->
-                    <div class="product-card">
-                        <div class="card-image saffron-bg"></div>
-                        <div class="card-details">
-                            <h3>Kashmiri Saffron</h3>
-                            <p>Mongra A++ Grade</p>
+                        <p>Mongra A++ Grade</p>
+                        <div class="product-footer-row">
                             <span class="price">₹850</span>
-                            <button class="add-btn">Add</button>
+                            <button class="add-btn" type="button">Add</button>
                         </div>
                     </div>
-                    <!-- Product 2: Shilajit -->
-                    <div class="product-card">
-                        <div class="card-image shilajit-bg"></div>
-                        <div class="card-details">
-                            <h3>Pure Shilajit</h3>
-                            <p>Himalayan Resin</p>
-                            <span class="price">₹1999</span>
-                            <button class="add-btn">Add</button>
-                        </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-image"><img src="ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.jpg" alt="Sidr honey jar">
                     </div>
-                    <!-- Product 3: Honey -->
-                    <div class="product-card">
-                        <div class="card-image honey-bg"></div>
-                        <div class="card-details">
-                            <h3>Sidr Honey</h3>
-                            <p>Yemeni Gold</p>
+                    <div class="card-details">
+                        <h3>Sidr Honey</h3>
+                        <p>Yemeni Gold</p>
+                        <div class="product-footer-row">
                             <span class="price">₹1500</span>
-                            <button class="add-btn">Add</button>
+                            <button class="add-btn" type="button">Add</button>
                         </div>
                     </div>
-                    <!-- Product 4: Dates -->
-                    <div class="product-card">
-                        <div class="card-image dates-bg"></div>
-                        <div class="card-details">
-                            <h3>Premium Dates</h3>
-                            <p>Ajwa & Medjool</p>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-image"><img src="moon333/ezgif-frame-125.jpg" alt="Pure shilajit resin"></div>
+                    <div class="card-details">
+                        <h3>Pure Shilajit</h3>
+                        <p>Himalayan Resin</p>
+                        <div class="product-footer-row">
+                            <span class="price">₹1999</span>
+                            <button class="add-btn" type="button">Add</button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-image"><img src="moon2222/ezgif-frame-056.jpg" alt="Ajwa dates pack"></div>
+                    <div class="card-details">
+                        <h3>Premium Dates</h3>
+                        <p>Ajwa &amp; Medjool</p>
+                        <div class="product-footer-row">
                             <span class="price">₹1200</span>
-                            <button class="add-btn">Add</button>
+                            <button class="add-btn" type="button">Add</button>
                         </div>
                     </div>
-                    <!-- Product 5: Kufas -->
-                    <div class="product-card">
-                        <div class="card-image kufas-bg"></div>
-                        <div class="card-details">
-                            <h3>Traditional Kufas</h3>
-                            <p>Hand-knit Cotton</p>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-image"><img src="moon333/ezgif-frame-051.jpg" alt="Traditional kufa caps"></div>
+                    <div class="card-details">
+                        <h3>Traditional Kufa</h3>
+                        <p>Hand-knit Cotton</p>
+                        <div class="product-footer-row">
                             <span class="price">₹499</span>
-                            <button class="add-btn">Add</button>
+                            <button class="add-btn" type="button">Add</button>
                         </div>
                     </div>
-                    <!-- Product 6: Sunnah Box -->
-                    <div class="product-card sunnah-box">
-                        <div class="card-image sunnah-bg"></div>
-                        <div class="card-details">
-                            <h3>The Sunnah Box</h3>
-                            <p>The Sunnah Box</p>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-image"><img src="ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.jpg" alt="Gift box collection">
+                    </div>
+                    <div class="card-details">
+                        <h3>The Sunnah Box</h3>
+                        <p>Complete Ritual Kit</p>
+                        <div class="product-footer-row">
                             <span class="price">₹4500</span>
-                            <button class="add-btn">Add</button>
+                            <button class="add-btn" type="button">Add</button>
                         </div>
                     </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="featured-collection section-padding">
+            <div class="collection-content">
+                <div class="collection-text reveal">
+                    <p class="label">Curated Collection</p>
+                    <h2 class="section-heading">Designed For Modern Rituals</h2>
+                    <p class="body-text">
+                        Discover hand-picked wellness essentials sourced from trusted growers and traditional artisan
+                        communities, built for everyday vitality.
+                    </p>
+                    <button class="btn-secondary" type="button">Browse Collection</button>
+                </div>
+                <div class="collection-image reveal">
+                    <img src="ezgif-2fae6b36993927b6-jpg/ezgif-frame-093.jpg" alt="Curated collection composition">
                 </div>
             </div>
         </section>
 
-        <!-- Contact Us Section -->
-        <section id="contact" class="contact-section">
-            <div class="container">
-                <h2 class="section-heading text-center">CONTACT US</h2>
-                <p class="contact-sub">Join the Moon Community</p>
-
-                <div class="social-grid">
-                    <a href="https://instagram.com" target="_blank" class="social-link instagram">
-                        <!-- Instagram SVG -->
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" class="brand-icon">
-                            <path
-                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                                fill="currentColor" />
-                        </svg>
-                    </a>
-                    <a href="https://facebook.com" target="_blank" class="social-link facebook">
-                        <!-- Facebook SVG -->
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" class="brand-icon">
-                            <path
-                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.791-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                                fill="currentColor" />
-                        </svg>
-                    </a>
-                    <a href="https://whatsapp.com" target="_blank" class="social-link whatsapp">
-                        <!-- WhatsApp SVG -->
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" class="brand-icon">
-                            <path
-                                d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
-                                fill="currentColor" />
-                        </svg>
-                    </a>
-                    <a href="https://shopify.com" target="_blank" class="social-link shopify">
-                        <!-- Corrected Shopify SVG -->
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" class="brand-icon">
-                            <path
-                                d="M22.8 9.3l-5.6-8.9c-.2-.3-.6-.4-1-.2l-5.6 2.5L5 .4c-.4-.2-.8-.1-1.1.2L.2 13.9c-.1.3 0 .7.3.9L12 23.3 23.5 14.8c.3-.2.4-.6.3-.9L22.8 9.3zM12 21.6L2.3 14 11 12.3l4.6-9.1 4.7 7.4-8.3 11z"
-                                fill="currentColor" />
-                        </svg>
-                    </a>
-                </div>
+        <section id="newsletter" class="newsletter-section section-padding">
+            <div class="newsletter-content reveal">
+                <p class="label">Newsletter</p>
+                <h3 class="section-heading">Stay Updated</h3>
+                <p class="body-text">Get early access to new drops and exclusive offers.</p>
+                <form class="newsletter-form" id="newsletter-form">
+                    <label class="sr-only" for="newsletter-email">Email address</label>
+                    <input id="newsletter-email" class="newsletter-input" type="email" placeholder="Enter your email"
+                        required>
+                    <button type="submit" class="newsletter-button">Subscribe</button>
+                </form>
             </div>
         </section>
+    </main>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container footer-flex">
-                <div class="footer-brand">MOON.</div>
-
-                <div class="footer-contact">
-                    <p><a href="mailto:contact@moonbrand.com">Arsalaanwani01@gmail.com</a></p>
-                    <p>Kanispora,Baramulla,J&K 193101</p>
-                </div>
-
-                <div class="footer-links">
-                    <a href="javascript:void(0)" onclick="alert('Privacy Policy Coming Soon')">Privacy</a>
-                    <a href="javascript:void(0)" onclick="alert('Terms of Service Coming Soon')">Terms</a>
-                    <a href="#contact">Contact</a>
-                </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h4 class="footer-title">Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="#shop">New Arrivals</a></li>
+                    <li><a href="#shop">Collections</a></li>
+                    <li><a href="#shop">Bundles</a></li>
+                </ul>
             </div>
-        </footer>
 
+            <div class="footer-column">
+                <h4 class="footer-title">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#newsletter">Contact</a></li>
+                    <li><a href="#">Shipping</a></li>
+                    <li><a href="#">Returns</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4 class="footer-title">Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#showcase">Our Story</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4 class="footer-title">Follow</h4>
+                <ul class="footer-links footer-social">
+                    <li><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></li>
+                    <li><a href="https://x.com" target="_blank" rel="noreferrer">X</a></li>
+                    <li><a href="https://youtube.com" target="_blank" rel="noreferrer">YouTube</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>(c) 2026 MOON. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="cart-modal" class="cart-modal hidden" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="cart-content">
+            <div class="cart-header">
+                <h2 id="cart-title">Your Cart</h2>
+                <button class="close-cart" type="button" aria-label="Close cart">&times;</button>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <p class="empty-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="total-row">
+                    <span>Total</span>
+                    <span id="cart-total">₹0</span>
+                </div>
+                <button class="checkout-btn" type="button">Checkout</button>
+            </div>
+        </div>
     </div>
+
     <script src="js/storytelling.js"></script>
     <script src="js/products.js"></script>
     <script src="js/app.js"></script>
