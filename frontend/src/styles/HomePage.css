@@ -1,0 +1,182 @@
+/* =========================================================
+   HomePage.css
+   Dynamic theme values are injected as CSS custom properties
+   on the <main> element: --hp-primary, --hp-accent, --hp-glow
+   ========================================================= */
+
+/* ── Hero Section ───────────────────────────────────────── */
+.hp-hero {
+  background: #FAFAF7;
+}
+
+.hp-hero-bg-wrapper {
+  z-index: 1;
+}
+
+.hp-hero-bg-text {
+  font-size: clamp(7rem, 22vw, 20rem);
+  letter-spacing: -0.04em;
+  color: rgba(var(--hp-glow), 0.06);
+  white-space: nowrap;
+  padding-left: 3vw;
+  font-weight: 900;
+}
+
+.hp-hero-radial {
+  z-index: 2;
+  background: radial-gradient(ellipse 55% 75% at 75% 55%, rgba(var(--hp-glow), 0.08), transparent 65%);
+  transition: background 0.9s ease;
+}
+
+.hp-hero-layout {
+  z-index: 10;
+}
+
+.hp-slide-label {
+  color: var(--hp-accent);
+}
+
+.hp-slide-title {
+  font-size: clamp(3.2rem, 7.5vw, 7rem);
+  color: var(--hp-primary);
+  animation-delay: 0.06s;
+  font-weight: 900;
+}
+
+.hp-tagline {
+  color: var(--hp-accent);
+  animation-delay: 0.1s;
+}
+
+.hp-rule {
+  background: rgba(var(--hp-glow), 0.45);
+  animation-delay: 0.13s;
+}
+
+.hp-desc {
+  color: #4A3A30;
+  animation-delay: 0.16s;
+}
+
+.hp-tags-wrapper {
+  animation-delay: 0.2s;
+}
+
+.hp-tag {
+  border: 1px solid rgba(var(--hp-glow), 0.32);
+  background: rgba(var(--hp-glow), 0.05);
+  color: var(--hp-primary);
+}
+
+.hp-cta-wrapper {
+  animation-delay: 0.24s;
+}
+
+.hp-price {
+  color: var(--hp-primary);
+}
+
+.hp-btn-primary {
+  background: var(--hp-primary);
+}
+
+.hp-btn-outline {
+  border: 1.5px solid rgba(var(--hp-glow), 0.45);
+  color: var(--hp-primary);
+  background: transparent;
+}
+
+/* ── Right Panel ────────────────────────────────────────── */
+.hp-right-panel {
+  z-index: 15;
+}
+
+.hp-right-glow {
+  z-index: 1;
+  background: radial-gradient(ellipse 70% 75% at 55% 50%, rgba(var(--hp-glow), 0.10), transparent 70%);
+  transition: background 0.9s ease;
+}
+
+.hp-canvas {
+  z-index: 2;
+  display: block;
+}
+
+.hp-feather {
+  z-index: 3;
+  width: 140px;
+  background: linear-gradient(to right, #FAFAF7 0%, rgba(250, 250, 247, 0.6) 60%, transparent 100%);
+}
+
+/* ── Mobile fallback ────────────────────────────────────── */
+.hp-mobile-img {
+  z-index: 5;
+}
+
+/* ── Carousel dots ──────────────────────────────────────── */
+.hp-dots {
+  z-index: 30;
+}
+
+.hp-dot {
+  height: 8px;
+  border-radius: 4px;
+  transition: all 0.5s;
+}
+
+.hp-dot--active {
+  width: 28px;
+  background: var(--hp-primary);
+}
+
+.hp-dot--inactive {
+  width: 8px;
+  background: rgba(var(--hp-glow), 0.28);
+}
+
+/* ── Progress bar ───────────────────────────────────────── */
+.hp-progress-track {
+  z-index: 30;
+  background: rgba(var(--hp-glow), 0.12);
+}
+
+.hp-progress-fill {
+  background: linear-gradient(90deg, var(--hp-primary), var(--hp-accent));
+}
+
+/* ── Marquee ────────────────────────────────────────────── */
+.hp-marquee-inner {
+  animation: marquee 40s linear infinite;
+}
+
+.hp-marquee-dot {
+  color: var(--hp-primary);
+}
+
+/* ── Category buttons ───────────────────────────────────── */
+.hp-cat-btn--active {
+  border-color: var(--hp-primary);
+  color: var(--hp-primary);
+  background: rgba(var(--hp-glow), 0.08);
+}
+
+.hp-cat-btn--inactive {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #71717a;
+  background: transparent;
+}
+
+/* ── Catalog cards ──────────────────────────────────────── */
+.hp-catalog-card {
+  animation-delay: var(--hp-card-delay, 0ms);
+}
+
+/* ── Editorial / Brand story ────────────────────────────── */
+.hp-rule-primary {
+  background: var(--hp-primary);
+}
+
+/* ── Stats ──────────────────────────────────────────────── */
+.hp-stat-value {
+  color: var(--hp-accent);
+}

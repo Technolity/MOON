@@ -1,0 +1,113 @@
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.floating {
+    animation: float 5s ease-in-out infinite;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(26px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Carousel: image entrance */
+@keyframes carousel-image-enter {
+    0% {
+        opacity: 0;
+        transform: translateX(-24px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+.carousel-image-enter {
+    animation: carousel-image-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Carousel: text entrance */
+@keyframes carousel-text-enter {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.carousel-text-enter {
+    animation: carousel-text-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+/* Carousel: progress bar */
+@keyframes carousel-progress {
+    from { width: 0%; }
+    to   { width: 100%; }
+}
+
+.carousel-progress {
+    animation: carousel-progress 6s linear forwards;
+}
+
+/* Hero background text entrance */
+@keyframes hero-bg-text-enter {
+    0% {
+        opacity: 0;
+        transform: scale(1.06);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.hero-bg-text-enter {
+    animation: hero-bg-text-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Hero product 3D entrance */
+@keyframes hero-product-enter {
+    0% {
+        opacity: 0;
+        transform: translateY(40px) scale(0.92);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.hero-product-enter {
+    animation: hero-product-enter 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
