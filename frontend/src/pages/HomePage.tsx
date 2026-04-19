@@ -139,12 +139,13 @@ export function HomePage({
   // Keep advanceRef current so phase timers can call it without stale closure
   useEffect(() => { advanceRef.current = advance; }, [advance]);
 
-  // Phase cascade per slide: 0→video 4s→1→CTA 5s→2→details 7s→auto-advance
+  // Phase cascade per slide:
+  // 0→video (3s) → 1→CTA buttons (4s) → 2→details (12s) → auto-advance
   useEffect(() => {
     setHeroPhase(0);
-    const t1 = setTimeout(() => setHeroPhase(1), 4000);
-    const t2 = setTimeout(() => setHeroPhase(2), 9000);
-    const t3 = setTimeout(() => advanceRef.current(), 16000);
+    const t1 = setTimeout(() => setHeroPhase(1), 3000);   // 3s: CTA appears
+    const t2 = setTimeout(() => setHeroPhase(2), 7000);   // 7s: details appear right after CTA fades
+    const t3 = setTimeout(() => advanceRef.current(), 19000); // 19s: auto-advance (12s on details)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [slideIndex]);
 
@@ -247,7 +248,7 @@ export function HomePage({
           zIndex: 30,
           opacity: heroPhase === 1 ? 1 : 0,
           transform: heroPhase === 1 ? 'translateY(0)' : 'translateY(14px)',
-          transition: 'opacity 0.7s ease, transform 0.7s ease',
+          transition: 'opacity 0.5s ease, transform 0.5s ease',
           pointerEvents: heroPhase === 1 ? 'auto' : 'none',
         }}>
           <button
