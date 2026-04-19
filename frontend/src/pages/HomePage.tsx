@@ -4,7 +4,7 @@ import { productStories } from '../data/products';
 import type { CatalogItem, ProductKey } from '../types';
 
 const CAROUSEL_PRODUCTS: ProductKey[] = ['shilajit', 'kashmiriSaffron', 'kashmiriHoney'];
-const CAROUSEL_MS = 6000;
+const CAROUSEL_MS = 10000;
 
 interface CarouselTheme {
   primary: string;
@@ -97,6 +97,8 @@ export function HomePage({
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [editorialSlide, setEditorialSlide] = useState(0);
   const [editorialFading, setEditorialFading] = useState(false);
+  const [showHeroCta, setShowHeroCta] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const activeKey = CAROUSEL_PRODUCTS[slideIndex];
@@ -117,9 +119,14 @@ export function HomePage({
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
   const goToSlide = useCallback((index: number) => {
-    setSlideIndex(index);
-    setAnimKey((k) => k + 1);
-    onSelectProduct(CAROUSEL_PRODUCTS[index]);
+    setIsTransitioning(true);
+    setShowHeroCta(false);
+    setTimeout(() => {
+      setSlideIndex(index);
+      setAnimKey((k) => k + 1);
+      onSelectProduct(CAROUSEL_PRODUCTS[index]);
+      setIsTransitioning(false);
+    }, 700);
   }, [onSelectProduct]);
 
   const advance = useCallback(() => {
@@ -131,6 +138,12 @@ export function HomePage({
     intervalRef.current = setInterval(advance, CAROUSEL_MS);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [advance, isPaused]);
+
+  useEffect(() => {
+    setShowHeroCta(false);
+    const ctaTimer = setTimeout(() => setShowHeroCta(true), 5000);
+    return () => clearTimeout(ctaTimer);
+  }, [slideIndex]);
 
   /* ── Editorial slideshow: cross-fade between slides ── */
   useEffect(() => {
@@ -196,12 +209,75 @@ export function HomePage({
         />
 
         {/* ── HERO MEDIA — positioned relative to section (full-width) ── */}
-        <HeroProductMedia
-          activeItem={activeItem}
-          activeProduct={activeKey}
-          activeStory={activeStory}
-          glow={theme.glow}
-        />
+        <div style={{
+          position: 'absolute', inset: 0,
+          opacity: isTransitioning ? 0 : 1,
+          transition: 'opacity 0.7s ease',
+          pointerEvents: 'none',
+        }}>
+          <HeroProductMedia
+            activeItem={activeItem}
+            activeProduct={activeKey}
+            activeStory={activeStory}
+            glow={theme.glow}
+          />
+        </div>
+
+        {/* ── HERO CTA OVERLAY ── */}
+        <div style={{
+          position: 'absolute',
+          bottom: '14%',
+          left: 0,
+          right: 0,
+          display: 'flex',
+          gap: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 30,
+          opacity: showHeroCta ? 1 : 0,
+          transform: showHeroCta ? 'translateY(0)' : 'translateY(12px)',
+          transition: 'opacity 0.6s ease, transform 0.6s ease',
+          pointerEvents: showHeroCta ? 'auto' : 'none',
+        }}>
+          <button
+            type="button"
+            onClick={() => { setShowHeroCta(false); onBrowseCollection(); }}
+            style={{
+              background: 'rgba(11,8,6,0.55)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.6)',
+              color: '#fff',
+              padding: '12px 28px',
+              fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+              fontSize: '0.625rem',
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              cursor: 'pointer',
+              borderRadius: 2,
+            }}
+          >Shop Now</button>
+          <button
+            type="button"
+            onClick={() => { setShowHeroCta(false); onSelectProduct(activeKey); }}
+            style={{
+              background: 'transparent',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.4)',
+              color: 'rgba(255,255,255,0.85)',
+              padding: '12px 28px',
+              fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+              fontSize: '0.625rem',
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              cursor: 'pointer',
+              borderRadius: 2,
+            }}
+          >Explore</button>
+        </div>
 
         {/* ── SPLIT LAYOUT ── */}
         <div className="relative flex min-h-[100svh]" style={{ zIndex: 10 }}>
@@ -463,19 +539,22 @@ export function HomePage({
 
           <div id="shop" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
-            gap: 1,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
+            gap: '20px',
           }}>
             {catalogItems.map((item, idx) => (
               <article
                 key={item.id}
                 className="group"
                 style={{
-                  border: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+                  border: '1px solid rgba(11,8,6,0.08)',
                   background: 'var(--paper-0, #FAF6EF)',
                   transition: 'transform 0.3s var(--ease-out), box-shadow 0.3s',
                   cursor: 'pointer',
                   position: 'relative',
+                  borderRadius: 4,
+                  boxShadow: '0 1px 8px rgba(11,8,6,0.07), 0 4px 20px rgba(11,8,6,0.04)',
+                  overflow: 'hidden',
                 }}
                 onClick={() => onProductClick(item)}
                 onMouseEnter={e => {
@@ -493,7 +572,7 @@ export function HomePage({
                     alt={item.alt}
                     className="group-hover:scale-[1.04]"
                     style={{
-                      height: idx === 0 ? 340 : 260, width: '100%',
+                      height: 260, width: '100%',
                       objectFit: 'cover',
                       transition: 'transform 700ms var(--ease-out)',
                       display: 'block',
@@ -508,35 +587,6 @@ export function HomePage({
                       letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 700,
                     }}>Best Seller</span>
                   )}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100" style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(11,8,6,0.55)',
-                    transition: 'opacity 0.3s',
-                  }}>
-                    <button
-                      type="button"
-                      onClick={() => onAddCatalogToCart(item)}
-                      style={{
-                        border: '1px solid rgba(250,246,239,0.8)',
-                        background: 'transparent',
-                        color: '#fff', padding: '10px 24px',
-                        fontFamily: 'var(--font-mark)', fontSize: '0.625rem',
-                        letterSpacing: '0.20em', textTransform: 'uppercase', fontWeight: 700,
-                        cursor: 'pointer',
-                        transition: 'background 0.2s, color 0.2s',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.background = '#fff';
-                        (e.currentTarget as HTMLElement).style.color = 'var(--ink-0)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.background = 'transparent';
-                        (e.currentTarget as HTMLElement).style.color = '#fff';
-                      }}
-                    >
-                      Quick Add
-                    </button>
-                  </div>
                 </div>
 
                 <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -550,13 +600,31 @@ export function HomePage({
                     fontSize: '1.125rem', fontWeight: 500,
                     color: 'var(--ink-0, #0B0806)', margin: 0,
                   }}>{item.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 8 }}>
-                    <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>★★★★★</span>
+                  <span style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 4 }}>★★★★★</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
                     <span style={{
                       fontFamily: 'var(--font-serif, Fraunces, serif)',
-                      fontSize: '1.25rem', fontWeight: 500,
+                      fontSize: '1.125rem', fontWeight: 500,
                       color: 'var(--ink-0)',
                     }}>{fmt(item.price)}</span>
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); onAddCatalogToCart(item); }}
+                      style={{
+                        background: 'var(--ink-0, #0B0806)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '8px 16px',
+                        fontFamily: 'var(--font-mark)',
+                        fontSize: '0.5625rem',
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        borderRadius: 2,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >Add to Cart</button>
                   </div>
                 </div>
               </article>

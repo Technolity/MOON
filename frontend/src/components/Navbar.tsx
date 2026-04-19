@@ -7,9 +7,10 @@ interface NavbarProps {
   onCartClick: () => void;
   onSearchClick: () => void;
   onAccountClick: () => void;
+  heroTheme?: 'light' | 'dark';
 }
 
-export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }: NavbarProps) {
+export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick, heroTheme = 'dark' }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -18,6 +19,8 @@ export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const heroLight = heroTheme === 'light' && !scrolled;
 
   const navItems = [
     { href: '/#shop', label: 'Shop' },
@@ -31,7 +34,7 @@ export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }
     <nav
       id="navbar"
       aria-label="Primary"
-      className={`moon-nav ${scrolled ? 'moon-nav--scrolled' : ''}`}
+      className={`moon-nav ${scrolled ? 'moon-nav--scrolled' : ''} ${heroLight ? 'moon-nav--hero-light' : ''}`}
     >
       <div className="moon-nav-inner">
         {/* Wordmark */}
@@ -49,14 +52,6 @@ export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }
               </Link>
             </li>
           ))}
-          <li>
-            <Link
-              to="/admin/login"
-              className={`moon-nav-link ${scrolled ? 'moon-nav-link--admin' : 'moon-nav-link--admin-transparent'}`}
-            >
-              Admin
-            </Link>
-          </li>
         </ul>
 
         {/* Right actions */}
@@ -114,13 +109,6 @@ export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }
                 >{item.label}</Link>
               </li>
             ))}
-            <li>
-              <Link
-                to="/admin/login"
-                onClick={() => setMobileOpen(false)}
-                className="moon-mobile-link moon-mobile-link--admin"
-              >Admin</Link>
-            </li>
           </ul>
         </div>
       )}

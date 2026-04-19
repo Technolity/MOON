@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { AdminLayout } from './admin/AdminLayout';
-import { clearAdminSession, createAdminSession, loadAdminSession, saveAdminSession } from './admin/adminAuth';
-import type { AdminSession } from './admin/adminAuth';
-import { RequireAdmin } from './admin/RequireAdmin';
+import { clearAdminSession, createAdminSession, saveAdminSession } from './admin/adminAuth';
 import { CartDrawer } from './components/CartDrawer';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { Footer } from './components/Footer';
@@ -13,10 +10,6 @@ import { useRevealAnimation } from './hooks/useRevealAnimation';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
-import { AdminLoginPage } from './pages/admin/AdminLoginPage';
-import { AnalyticsFocusPage } from './pages/admin/AnalyticsFocusPage';
-import { DashboardOverviewPage } from './pages/admin/DashboardOverviewPage';
-import { InventoryPage } from './pages/admin/InventoryPage';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { api, useAddCartItemMutation, useClearCartMutation, useGetCartQuery, useGetMeQuery, useGetProductsQuery, useLoginMutation, useRemoveCartItemMutation } from './store/services/api';
 import { getGuestCartSessionId } from './store/services/cartSession';
@@ -105,7 +98,7 @@ function AppShell() {
   const guestSessionId = useMemo(() => getGuestCartSessionId(), []);
 
   const [activeProduct, setActiveProduct] = useState<ProductKey>('shilajit');
-  const [adminSession, setAdminSession] = useState<AdminSession | null>(() => loadAdminSession());
+  const [adminSession, setAdminSession] = useState<{ token: string; email: string } | null>(() => null);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CatalogItem | null>(null);
 
@@ -363,28 +356,11 @@ function AppShell() {
           onCartClick={openCartDrawer}
           onSearchClick={openShopSection}
           onAccountClick={openAdminLogin}
+          heroTheme="light"
         />
       ) : null}
 
       <Routes>
-        <Route
-          path="/admin/login"
-          element={<AdminLoginPage session={adminSession} onLogin={handleAdminLogin} isLoading={isAdminLoginLoading} />}
-        />
-        <Route
-          path="/admin"
-          element={(
-            <RequireAdmin session={adminSession}>
-              <AdminLayout session={adminSession!} onLogout={handleAdminLogout} />
-            </RequireAdmin>
-          )}
-        >
-          <Route index element={<Navigate to="dashboard-overview" replace />} />
-          <Route path="dashboard-overview" element={<DashboardOverviewPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="analytics-focus" element={<AnalyticsFocusPage />} />
-          <Route path="*" element={<Navigate to="dashboard-overview" replace />} />
-        </Route>
         <Route
           path="/"
           element={

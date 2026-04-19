@@ -167,3 +167,21 @@
 .moon-mobile-link--admin {
   color: var(--ink-3, #8A7A66);
 }
+
+/* Dynamic contrast for hero overlay */
+.moon-nav--hero-light .moon-nav-icon,
+.moon-nav--hero-light .moon-wordmark-text,
+.moon-nav--hero-light .moon-wordmark-tagline {
+  color: #fff;
+  transition: color 0.4s ease;
+}
+.moon-nav--hero-light .moon-nav-link {
+  color: rgba(255,255,255,0.85);
+  transition: color 0.4s ease;
+}
+.moon-nav--hero-light .moon-nav-link:hover {
+  color: #fff;
+}
+.moon-nav--hero-light .moon-nav-action-btn {
+  color: #fff;
+}

@@ -3,87 +3,87 @@ import type { CatalogItem, ProductStory, ProductKey, ShippingZone } from '../typ
 export const productStories: Record<ProductKey, ProductStory> = {
   shilajit: {
     key: 'shilajit',
-    title: 'Mountain Strength.',
-    subtitle: 'Pure Himalayan resin for daily stamina, clarity, and recovery.',
+    title: 'From the Zanskar Ridge.',
+    subtitle: 'Gold-grade Himalayan resin — harvested above 4,000 metres.',
     theme: 'shilajit',
     color: '#7C4A2A',
-    desc: 'Sourced from high-altitude Himalayan rocks and purified for potency. Our Shilajit is rich in fulvic acid and trace minerals.',
+    desc: 'Seeping through ancient rockfaces in the Zanskar range of Ladakh, this resin forms over centuries before it reaches your hands. Purified by traditional methods, rich in fulvic acid and 85+ trace minerals.',
     price: '₹1,999',
-    details: 'Gold Grade Resin<br>Third-party tested<br>Daily vitality support',
+    details: 'Gold Grade Resin<br>Third-party lab tested<br>Daily vitality & clarity',
     featureName: 'Shilajit',
-    featureDesc: 'The primary ritual product of MOON, built for consistent performance and focus.'
+    featureDesc: 'The primary ritual product of MOON — built for consistent focus and recovery from the heights of the Himalaya.'
   },
   kashmiriSaffron: {
     key: 'kashmiriSaffron',
-    title: 'Crimson Ritual.',
-    subtitle: "Kashmiri Mongra threads with rich aroma and color.",
+    title: 'Pampore at Dawn.',
+    subtitle: 'Mongra A++ threads — picked before sunrise in the Valley.',
     theme: 'saffron',
     color: '#F25C2A',
-    desc: "Hand-picked from Pampore and graded for deep red stigmas. Ideal for milk infusions, wellness blends, and culinary use.",
+    desc: 'In the crocus fields of Pampore — the saffron bowl of Kashmir — harvest happens in the last hours of darkness. These Mongra threads are hand-sorted at sunrise and sun-dried on rooftop trays above the Dal.',
     price: '₹1,250',
-    details: 'Mongra A++ Grade<br>Deep red stigmas<br>Hand sorted threads',
+    details: 'Mongra A++ Grade<br>Deep crimson stigmas<br>Hand-sorted & sun-dried',
     featureName: 'Kashmiri Saffron',
-    featureDesc: "Hand-selected Mongra threads from Pampore's autumn harvest."
+    featureDesc: "Hand-selected Mongra threads from Pampore's autumn harvest — the rarest saffron grown on Indian soil."
   },
   kashmiriHoney: {
     key: 'kashmiriHoney',
-    title: 'Liquid Gold.',
-    subtitle: 'Raw Kashmiri honey — wild mountain harvested.',
+    title: 'Meadows of Pahalgam.',
+    subtitle: 'Wild mountain honey — raw and unfiltered from alpine Kashmir.',
     theme: 'honey',
     color: '#C8960A',
-    desc: 'Pure raw honey harvested from high-altitude Kashmir meadows. Unfiltered, enzyme-rich, and deeply nourishing.',
+    desc: 'Harvested from beehives set among wildflower meadows above Pahalgam and Gulmarg, where bees forage on alpine clover at 2,500 metres. Bottled within days of harvest — enzyme-alive, never heated.',
     price: '₹1,150',
-    details: 'Wild mountain sourced<br>Unfiltered & raw<br>Enzyme-rich purity',
+    details: 'Wild alpine harvested<br>Unfiltered & raw<br>Enzyme-rich purity',
     featureName: 'Kashmiri Honey',
-    featureDesc: 'Liquid gold from the meadows of Kashmir — raw, wild, and deeply nourishing.'
+    featureDesc: 'Liquid gold from the high meadows of Kashmir — raw, wild, and bottled close to where the bees live.'
   },
   iraniSaffron: {
     key: 'iraniSaffron',
     title: 'Persian Bloom.',
-    subtitle: 'Irani Negin saffron for balanced flavor and vibrant infusion.',
+    subtitle: 'Irani Negin saffron — strong colour, balanced character.',
     theme: 'honey',
     color: '#D8A03F',
-    desc: 'Selected Negin saffron threads imported from Iran with strict aroma and color standards for consistent quality.',
+    desc: 'Selected Negin grade threads imported from Iran, chosen for consistent colour release and a warm, slightly sweet profile. Ideal for everyday ritual — saffron milk, rice dishes, and morning teas.',
     price: '₹1,050',
-    details: 'Negin Grade<br>Strong color release<br>Daily premium use',
+    details: 'Negin Grade Threads<br>Strong colour release<br>Everyday premium use',
     featureName: 'Irani Saffron',
-    featureDesc: 'Balanced profile saffron for desserts, teas, and everyday rituals.'
+    featureDesc: 'Balanced saffron for daily rituals — desserts, teas, and the morning cup.'
   },
   kashmiriAlmonds: {
     key: 'kashmiriAlmonds',
-    title: 'Valley Crunch.',
-    subtitle: 'Kashmiri almonds packed with clean fats and natural vitamin E.',
+    title: 'Valley Harvest.',
+    subtitle: 'Kashmiri almonds — clean fats, natural vitamin E, orchard grown.',
     theme: 'honey',
     color: '#CBA674',
-    desc: 'Naturally grown almonds from Kashmir, cleaned and graded for a crisp texture and nutrient-dense snacking.',
+    desc: 'Grown in the orchards of the Kashmir Valley where cool nights and mineral-rich soil produce almonds with a distinctly dense, creamy texture. Unroasted, unsalted, and nothing added.',
     price: '₹899',
-    details: 'Premium whole kernels<br>Unroasted and unsalted<br>Protein-rich',
+    details: 'Premium whole kernels<br>Unroasted & unsalted<br>Protein & vitamin E rich',
     featureName: 'Kashmiri Almonds',
-    featureDesc: 'Daily nutrition staple for balanced snacking and wellness plans.'
+    featureDesc: 'Daily nutrition from Kashmir orchards — a clean snacking staple.'
   },
   walnuts: {
     key: 'walnuts',
-    title: 'Brain Fuel.',
-    subtitle: 'Kashmiri walnuts known for omega-rich nourishment.',
+    title: 'Lolab Orchards.',
+    subtitle: 'Kashmiri walnuts — omega-rich, fresh-crop, orchard select.',
     theme: 'honey',
     color: '#9E7A52',
-    desc: 'Fresh crop walnuts sourced from Kashmir orchards with naturally high omega content for daily nutritional support.',
+    desc: "Sourced from the walnut orchards of Lolab Valley — one of Kashmir's most fertile pockets — these fresh-season kernels are known for high omega-3 content and a mild, buttery flavour.",
     price: '₹950',
-    details: 'Half and whole kernels<br>Fresh seasonal batch<br>Omega-rich',
+    details: 'Half & whole kernels<br>Fresh seasonal harvest<br>High omega-3 content',
     featureName: 'Walnuts',
-    featureDesc: 'Classic wellness dry fruit for long-term heart and brain support.'
+    featureDesc: 'Classic wellness staple from Lolab Valley — for long-term heart and brain support.'
   },
   kashmiriGhee: {
     key: 'kashmiriGhee',
-    title: 'Golden Nourish.',
-    subtitle: 'Traditional Kashmiri bilona ghee with deep aroma.',
+    title: 'Bangus Valley Gold.',
+    subtitle: 'Traditional bilona ghee — slow-churned, small-batch.',
     theme: 'saffron',
     color: '#F1B65A',
-    desc: 'Slow-crafted bilona-style ghee inspired by traditional methods, ideal for daily cooking and wellness routines.',
+    desc: 'Crafted in the bilona tradition from cows that graze the pastures of Bangus Valley. The process takes two days of hand-churning cultured curd — producing ghee with a deep, nutty aroma that mass production cannot replicate.',
     price: '₹1,350',
-    details: 'Bilona process<br>Small-batch prepared<br>Rich aromatic finish',
+    details: 'Bilona process<br>Small-batch prepared<br>Deep aromatic finish',
     featureName: 'Kashmiri Ghee',
-    featureDesc: 'Small-batch clarified butter for premium taste and nourishment.'
+    featureDesc: 'Small-batch clarified butter from Bangus Valley — traditional method, premium taste.'
   }
 };
 
