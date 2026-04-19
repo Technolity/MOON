@@ -97,9 +97,12 @@ export function HomePage({
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [editorialSlide, setEditorialSlide] = useState(0);
   const [editorialFading, setEditorialFading] = useState(false);
-  const [showHeroCta, setShowHeroCta] = useState(false);
+  // 0 = video only | 1 = CTA buttons visible | 2 = full details visible
+  const [heroPhase, setHeroPhase] = useState<0 | 1 | 2>(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStartX = useRef<number>(0);
+  const advanceRef = useRef<() => void>(() => {});
 
   const activeKey = CAROUSEL_PRODUCTS[slideIndex];
   const theme = THEMES[activeKey];
@@ -120,7 +123,7 @@ export function HomePage({
 
   const goToSlide = useCallback((index: number) => {
     setIsTransitioning(true);
-    setShowHeroCta(false);
+    setHeroPhase(0);
     setTimeout(() => {
       setSlideIndex(index);
       setAnimKey((k) => k + 1);
@@ -133,16 +136,16 @@ export function HomePage({
     goToSlide((slideIndex + 1) % CAROUSEL_PRODUCTS.length);
   }, [slideIndex, goToSlide]);
 
-  useEffect(() => {
-    if (isPaused) return;
-    intervalRef.current = setInterval(advance, CAROUSEL_MS);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [advance, isPaused]);
+  // Keep advanceRef current so phase timers can call it without stale closure
+  useEffect(() => { advanceRef.current = advance; }, [advance]);
 
+  // Phase cascade per slide: 0→video 4s→1→CTA 5s→2→details 7s→auto-advance
   useEffect(() => {
-    setShowHeroCta(false);
-    const ctaTimer = setTimeout(() => setShowHeroCta(true), 5000);
-    return () => clearTimeout(ctaTimer);
+    setHeroPhase(0);
+    const t1 = setTimeout(() => setHeroPhase(1), 4000);
+    const t2 = setTimeout(() => setHeroPhase(2), 9000);
+    const t3 = setTimeout(() => advanceRef.current(), 16000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [slideIndex]);
 
   /* ── Editorial slideshow: cross-fade between slides ── */
@@ -176,6 +179,14 @@ export function HomePage({
         style={{ background: 'var(--paper-0, #FAF6EF)' }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={e => {
+          const diff = touchStartX.current - e.changedTouches[0].clientX;
+          if (Math.abs(diff) > 48) {
+            if (diff > 0) goToSlide((slideIndex + 1) % CAROUSEL_PRODUCTS.length);
+            else goToSlide((slideIndex - 1 + CAROUSEL_PRODUCTS.length) % CAROUSEL_PRODUCTS.length);
+          }
+        }}
       >
         {/* Giant ghosted product name — left-anchored, sits behind image */}
         <div
@@ -223,7 +234,7 @@ export function HomePage({
           />
         </div>
 
-        {/* ── HERO CTA OVERLAY ── */}
+        {/* ── HERO CTA OVERLAY — phase 1 only ── */}
         <div style={{
           position: 'absolute',
           bottom: '14%',
@@ -234,21 +245,21 @@ export function HomePage({
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 30,
-          opacity: showHeroCta ? 1 : 0,
-          transform: showHeroCta ? 'translateY(0)' : 'translateY(12px)',
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-          pointerEvents: showHeroCta ? 'auto' : 'none',
+          opacity: heroPhase === 1 ? 1 : 0,
+          transform: heroPhase === 1 ? 'translateY(0)' : 'translateY(14px)',
+          transition: 'opacity 0.7s ease, transform 0.7s ease',
+          pointerEvents: heroPhase === 1 ? 'auto' : 'none',
         }}>
           <button
             type="button"
-            onClick={() => { setShowHeroCta(false); onBrowseCollection(); }}
+            onClick={() => { setHeroPhase(0); onBrowseCollection(); }}
             style={{
-              background: 'rgba(11,8,6,0.55)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.6)',
+              background: 'rgba(11,8,6,0.60)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.65)',
               color: '#fff',
-              padding: '12px 28px',
+              padding: '13px 32px',
               fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
               fontSize: '0.625rem',
               letterSpacing: '0.22em',
@@ -260,14 +271,14 @@ export function HomePage({
           >Shop Now</button>
           <button
             type="button"
-            onClick={() => { setShowHeroCta(false); onSelectProduct(activeKey); }}
+            onClick={() => setHeroPhase(2)}
             style={{
               background: 'transparent',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.4)',
-              color: 'rgba(255,255,255,0.85)',
-              padding: '12px 28px',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.45)',
+              color: 'rgba(255,255,255,0.9)',
+              padding: '13px 32px',
               fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
               fontSize: '0.625rem',
               letterSpacing: '0.22em',
@@ -282,32 +293,41 @@ export function HomePage({
         {/* ── SPLIT LAYOUT ── */}
         <div className="relative flex min-h-[100svh]" style={{ zIndex: 10 }}>
 
-          {/* LEFT PANEL — editorial text content */}
+          {/* LEFT PANEL — editorial text content, revealed at phase 2 */}
           <div className="relative flex w-full flex-col justify-start overflow-hidden px-8 pb-12 pt-28 md:w-[48%] md:justify-center md:px-14 md:pb-28 md:pt-32 lg:px-20 xl:px-24">
-            {/* Mobile gradient scrim so text is readable over the full-bleed video */}
+            {/* Mobile gradient scrim — always present so text is readable */}
             <div
               className="absolute inset-0 pointer-events-none md:hidden"
               style={{
-                background: 'linear-gradient(to bottom, rgba(250,246,239,0.60) 0%, rgba(250,246,239,0.82) 100%)',
+                background: 'linear-gradient(to bottom, rgba(250,246,239,0.55) 0%, rgba(250,246,239,0.88) 100%)',
                 zIndex: 0,
+                opacity: heroPhase >= 2 ? 1 : 0,
+                transition: 'opacity 0.8s ease',
               }}
             />
 
-            {/* Slide counter + eyebrow */}
+            {/* Slide counter + eyebrow — always visible */}
             <p
               key={`label-${animKey}`}
               className="mb-5 font-display text-[10px] uppercase tracking-[0.44em] carousel-text-enter"
-              style={{ color: theme.accent }}
+              style={{ color: heroPhase >= 2 ? theme.accent : 'rgba(255,255,255,0.75)', position: 'relative', zIndex: 1, transition: 'color 0.6s ease' }}
             >
               {String(slideIndex + 1).padStart(2, '0')}&thinsp;/&thinsp;{String(CAROUSEL_PRODUCTS.length).padStart(2, '0')}&nbsp;&nbsp;·&nbsp;&nbsp;Himalayan Origin
             </p>
+            {/* Content panel — fades in at phase 2 */}
+            <div style={{
+              opacity: heroPhase >= 2 ? 1 : 0,
+              transform: heroPhase >= 2 ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.8s ease, transform 0.8s ease',
+              position: 'relative', zIndex: 1,
+            }}>
 
             {/* Product name — massive */}
             <h1
               key={`title-${animKey}`}
               className="font-display uppercase leading-[0.9] tracking-tighter carousel-text-enter"
               style={{
-                fontSize: 'clamp(2.2rem, 3.8vw, 4.4rem)',
+                fontSize: 'clamp(2rem, 8vw, 4.4rem)',
                 color: theme.primary,
                 animationDelay: '0.06s',
                 fontWeight: 900,
@@ -402,6 +422,7 @@ export function HomePage({
                 </button>
               </div>
             </div>
+            </div>{/* end content panel wrapper */}
           </div>
 
         </div>
