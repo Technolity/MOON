@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import '../styles/Navbar.css';
 
 interface NavbarProps {
   cartCount: number;
@@ -9,38 +10,41 @@ interface NavbarProps {
 }
 
 export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }: NavbarProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const navItems = [
-    { href: '/#rituals', label: 'Shop' },
-    { href: '/#archives', label: 'Our Story' },
-    { href: '/#rituals', label: 'Shilajit' },
-    { href: '/#rituals', label: 'Saffron' },
-    { href: '/#about', label: 'Journal' },
+    { href: '/#shop', label: 'Shop' },
+    { href: '/#rituals', label: 'Rituals' },
+    { href: '/#archives', label: 'The Archive' },
+    { href: '/#journal', label: 'Journal' },
+    { href: '/#contact', label: 'Contact' },
   ];
 
   return (
     <nav
-      className="fixed top-0 z-50 w-full border-b border-zinc-200/60 bg-white/85 px-4 py-4 backdrop-blur-xl md:px-10"
       id="navbar"
       aria-label="Primary"
+      className={`moon-nav ${scrolled ? 'moon-nav--scrolled' : ''}`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
-        <Link
-          to="/#sanctuary"
-          className="font-headline text-xl font-bold tracking-tight text-zinc-900"
-          aria-label="Moon home"
-        >
-          MOON
+      <div className="moon-nav-inner">
+        {/* Wordmark */}
+        <Link to="/" aria-label="Moon home" className="moon-wordmark">
+          <span className="moon-wordmark-text">moon.</span>
+          <span className="moon-wordmark-tagline">Naturally yours</span>
         </Link>
 
-        <ul className="hidden items-center gap-6 md:flex">
+        {/* Desktop nav links */}
+        <ul className="moon-nav-links hidden md:flex">
           {navItems.map((item) => (
             <li key={item.href}>
-              <Link
-                to={item.href}
-                className="font-headline text-xs font-semibold uppercase tracking-[0.1em] text-zinc-500 transition-colors duration-300 hover:text-zinc-900"
-              >
+              <Link to={item.href} className="moon-nav-link">
                 {item.label}
               </Link>
             </li>
@@ -48,101 +52,78 @@ export function Navbar({ cartCount, onCartClick, onSearchClick, onAccountClick }
           <li>
             <Link
               to="/admin/login"
-              className="font-headline text-xs font-semibold uppercase tracking-[0.1em] text-zinc-500 transition-colors duration-300 hover:text-zinc-900"
+              className={`moon-nav-link ${scrolled ? 'moon-nav-link--admin' : 'moon-nav-link--admin-transparent'}`}
             >
               Admin
             </Link>
           </li>
         </ul>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <form
-            className="relative hidden md:block"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSearchClick();
-            }}
-          >
-            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-              search
-            </span>
-            <input
-              className="w-44 border border-transparent bg-zinc-100 py-2 pl-10 pr-3 font-label text-[10px] uppercase tracking-[0.2em] text-zinc-700 outline-none transition-colors focus:border-zinc-400/50"
-              placeholder="Explore"
-              type="search"
-              aria-label="Search products"
-            />
-          </form>
-
+        {/* Right actions */}
+        <div className="moon-nav-actions">
           <button
-            className="relative rounded-full p-2 text-zinc-800 transition-opacity hover:opacity-80"
             type="button"
-            aria-label={`Open cart with ${cartCount} items`}
-            onClick={onCartClick}
+            aria-label="Search"
+            onClick={onSearchClick}
+            className="moon-nav-action-btn"
           >
-            <span className="material-symbols-outlined">shopping_bag</span>
-            <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-secondary px-1 text-center text-[10px] font-semibold leading-[18px] text-on-secondary-fixed">
-              {cartCount}
-            </span>
+            <span className="material-symbols-outlined moon-nav-icon">search</span>
           </button>
-
           <button
-            className="hidden rounded-full p-2 text-zinc-800 transition-opacity hover:opacity-80 md:inline-flex"
             type="button"
-            aria-label="Owner dashboard login"
+            aria-label="Account"
             onClick={onAccountClick}
+            className="moon-nav-action-btn hidden md:flex"
           >
-            <span className="material-symbols-outlined">person</span>
+            <span className="material-symbols-outlined moon-nav-icon">person</span>
           </button>
-
           <button
-            className="rounded-full p-2 text-zinc-800 md:hidden"
             type="button"
-            aria-expanded={isMobileMenuOpen ? 'true' : 'false'}
-            aria-controls="mobile-menu"
-            aria-label="Toggle mobile menu"
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
+            aria-label={`Open cart, ${cartCount} items`}
+            onClick={onCartClick}
+            className="moon-nav-action-btn moon-nav-cart-btn"
           >
-            <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+            <span className="material-symbols-outlined moon-nav-icon">shopping_bag</span>
+            {cartCount > 0 && (
+              <span className="moon-cart-badge">{cartCount}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setMobileOpen(o => !o)}
+            className="moon-nav-action-btn md:hidden"
+          >
+            <span className="material-symbols-outlined moon-nav-icon">
+              {mobileOpen ? 'close' : 'menu'}
+            </span>
           </button>
         </div>
       </div>
 
-      {isMobileMenuOpen ? (
-        <div id="mobile-menu" className="mx-auto mt-4 w-full max-w-7xl border border-zinc-200/60 bg-white p-4 md:hidden">
-          <ul className="space-y-3">
-            {navItems.map((item) => (
-              <li key={`mobile-${item.href}`}>
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="moon-mobile-menu">
+          <ul className="moon-mobile-menu-list">
+            {navItems.map(item => (
+              <li key={`m-${item.href}`}>
                 <Link
                   to={item.href}
-                  className="block font-headline text-xs font-semibold uppercase tracking-[0.12em] text-zinc-700"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
+                  onClick={() => setMobileOpen(false)}
+                  className="moon-mobile-link"
+                >{item.label}</Link>
               </li>
             ))}
             <li>
               <Link
                 to="/admin/login"
-                className="block font-headline text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Admin
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/checkout"
-                className="block font-headline text-xs font-semibold uppercase tracking-[0.12em] text-zinc-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Checkout
-              </Link>
+                onClick={() => setMobileOpen(false)}
+                className="moon-mobile-link moon-mobile-link--admin"
+              >Admin</Link>
             </li>
           </ul>
         </div>
-      ) : null}
+      )}
     </nav>
   );
 }

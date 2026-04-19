@@ -45,3 +45,15 @@ coverage/
 .cache/
 tmp/
 temp/
+
+# ── Animation frame PNGs (too large for git, only keep single poster per product) ──
+frontend/public/ezgif-2fae6b36993927b6-jpg/
+frontend/public/moon2222/
+frontend/public/moon333/
+# Keep the single poster image per product (used as video fallback/thumbnail)
+!frontend/public/ezgif-2fae6b36993927b6-jpg/ezgif-frame-146.png
+!frontend/public/moon2222/ezgif-frame-162.png
+!frontend/public/moon333/ezgif-frame-162.png
+# ── Large video files — host on CDN, exclude from git ───────────────────────
+frontend/public/*.mp4
+frontend/public/*.webm

@@ -103,7 +103,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Shilajit',
     subtitle: 'Himalayan Gold Grade Resin',
     price: 1999,
-    image: '/moon333/ezgif-frame-125.jpg',
+    image: '/moon333/ezgif-frame-125.png',
     alt: 'Pure Shilajit resin jar',
     featured: true,
     productKey: 'shilajit'
@@ -113,7 +113,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Kashmiri Saffron',
     subtitle: 'Mongra A++ Grade',
     price: 1250,
-    image: '/moon2222/ezgif-frame-120.jpg',
+    image: '/moon2222/ezgif-frame-120.png',
     alt: 'Premium saffron',
     productKey: 'kashmiriSaffron'
   },
@@ -122,7 +122,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Kashmiri Honey',
     subtitle: 'Wild Mountain Raw Honey',
     price: 1150,
-    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.jpg',
+    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.png',
     alt: 'Kashmiri honey jar — liquid gold',
     productKey: 'kashmiriHoney'
   },
@@ -131,7 +131,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Irani Saffron',
     subtitle: 'Negin Grade Threads',
     price: 1050,
-    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.jpg',
+    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.png',
     alt: 'Irani saffron threads',
     productKey: 'iraniSaffron'
   },
@@ -140,7 +140,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Kashmiri Almonds',
     subtitle: 'Premium Whole Kernels',
     price: 899,
-    image: '/moon2222/ezgif-frame-056.jpg',
+    image: '/moon2222/ezgif-frame-056.png',
     alt: 'Kashmiri almonds',
     productKey: 'kashmiriAlmonds'
   },
@@ -149,7 +149,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Walnuts',
     subtitle: 'Kashmir Orchard Select',
     price: 950,
-    image: '/moon333/ezgif-frame-051.jpg',
+    image: '/moon333/ezgif-frame-051.png',
     alt: 'Walnuts premium pack',
     productKey: 'walnuts'
   },
@@ -158,7 +158,7 @@ export const catalogItems: CatalogItem[] = [
     title: 'Kashmiri Ghee',
     subtitle: 'Bilona Crafted',
     price: 1350,
-    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.jpg',
+    image: '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.png',
     alt: 'Kashmiri ghee jar',
     productKey: 'kashmiriGhee'
   }

@@ -5,11 +5,11 @@ import { clearAdminSession, createAdminSession, loadAdminSession, saveAdminSessi
 import type { AdminSession } from './admin/adminAuth';
 import { RequireAdmin } from './admin/RequireAdmin';
 import { CartDrawer } from './components/CartDrawer';
+import { ProductDetailModal } from './components/ProductDetailModal';
 import { Footer } from './components/Footer';
 import { Navbar } from './components/Navbar';
 import { catalogItems as staticCatalogItems, productOrder, productStories } from './data/products';
 import { useRevealAnimation } from './hooks/useRevealAnimation';
-import { useStorytellingCanvas } from './hooks/useStorytellingCanvas';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
@@ -70,26 +70,16 @@ function inferProductKey(product: BackendProduct): ProductKey | null {
   return null;
 }
 
-function mapBackendCartItems(items: BackendCartItem[]) {
+function mapBackendCartItems(items: BackendCartItem[], catalog: CatalogItem[] = []) {
+  const catalogById = catalog.reduce((map, ci) => { map[ci.id] = ci; return map; }, {} as Record<string, CatalogItem>);
   return items.map((item) => ({
     id: item.productId,
     itemId: item.itemId,
     title: item.productName,
     price: Number(item.price),
-    quantity: item.quantity
+    quantity: item.quantity,
+    image: catalogById[item.productId]?.image,
   }));
-}
-
-function getNextProduct(current: ProductKey | string): ProductKey {
-  const index = productOrder.indexOf(current as ProductKey);
-  if (index < 0) return productOrder[0];
-  return productOrder[(index + 1) % productOrder.length];
-}
-
-function getPrevProduct(current: ProductKey | string): ProductKey {
-  const index = productOrder.indexOf(current as ProductKey);
-  if (index < 0) return productOrder[0];
-  return productOrder[(index - 1 + productOrder.length) % productOrder.length];
 }
 
 function trackEvent(eventName: string, payload: Record<string, unknown>) {
@@ -99,6 +89,11 @@ function trackEvent(eventName: string, payload: Record<string, unknown>) {
       ...payload
     });
   }
+}
+
+function normalizeLegacyFramePath(imageUrl: string | null | undefined) {
+  if (!imageUrl) return imageUrl ?? undefined;
+  return imageUrl.replace(/(\/(?:moon2222|moon333|ezgif-2fae6b36993927b6-jpg)\/ezgif-frame-\d{3})\.jpg$/i, '$1.png');
 }
 
 function AppShell() {
@@ -112,6 +107,7 @@ function AppShell() {
   const [activeProduct, setActiveProduct] = useState<ProductKey>('shilajit');
   const [adminSession, setAdminSession] = useState<AdminSession | null>(() => loadAdminSession());
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<CatalogItem | null>(null);
 
   const { data: backendProducts } = useGetProductsQuery();
   const { data: backendCartItems, isSuccess: isCartLoaded } = useGetCartQuery({ sessionId: guestSessionId });
@@ -141,7 +137,7 @@ function AppShell() {
         title: product.name,
         subtitle: product.description || fallback.subtitle,
         price: Number(product.discount_price ?? product.price),
-        image: product.image_url || fallback.image,
+        image: normalizeLegacyFramePath(product.image_url) || fallback.image,
         alt: fallback.alt,
         featured: fallback.featured,
         productKey: key
@@ -170,16 +166,15 @@ function AppShell() {
   }, [activeProduct]);
 
   const activeStory = productStories[resolvedProductKey] ?? productStories.shilajit;
-  const canvasRef = useStorytellingCanvas(resolvedProductKey);
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   useRevealAnimation();
 
   useEffect(() => {
     if (isCartLoaded && backendCartItems) {
-      dispatch(setItems(mapBackendCartItems(backendCartItems)));
+      dispatch(setItems(mapBackendCartItems(backendCartItems, catalogItems)));
     }
-  }, [backendCartItems, dispatch, isCartLoaded]);
+  }, [backendCartItems, catalogItems, dispatch, isCartLoaded]);
 
   useEffect(() => {
     if (!adminSession || !profileError) return;
@@ -277,6 +272,7 @@ function AppShell() {
   };
 
   const handleAddCatalogItem = async (item: { id: string; title: string; price: number }) => {
+    const image = catalogItems.find((ci) => ci.id === item.id)?.image;
     let syncedWithServer = false;
 
     try {
@@ -285,10 +281,10 @@ function AppShell() {
         productId: item.id,
         quantity: 1
       }).unwrap();
-      dispatch(setItems(mapBackendCartItems(updatedCart)));
+      dispatch(setItems(mapBackendCartItems(updatedCart, catalogItems)));
       syncedWithServer = true;
     } catch {
-      dispatch(addItem(item));
+      dispatch(addItem({ ...item, image }));
     }
 
     trackEvent('add_to_cart', {
@@ -297,6 +293,11 @@ function AppShell() {
       source: syncedWithServer ? 'backend' : 'local-fallback'
     });
     setIsCartDrawerOpen(true);
+  };
+
+  const handleProductClick = (item: CatalogItem) => {
+    setSelectedProduct(item);
+    setIsCartDrawerOpen(false);
   };
 
   const handleAddCurrentStory = async () => {
@@ -316,7 +317,7 @@ function AppShell() {
           sessionId: guestSessionId,
           itemId: removed.itemId
         }).unwrap();
-        dispatch(setItems(mapBackendCartItems(updated)));
+        dispatch(setItems(mapBackendCartItems(updated, catalogItems)));
       } catch {
         dispatch(removeItem(id));
       }
@@ -388,17 +389,12 @@ function AppShell() {
           path="/"
           element={
             <HomePage
-              activeProduct={resolvedProductKey}
-              activeStory={activeStory}
               catalogItems={catalogItems}
-              canvasRef={canvasRef}
               onSelectProduct={setActiveProduct}
-              onPrevProduct={() => setActiveProduct((current) => getPrevProduct(current))}
-              onNextProduct={() => setActiveProduct((current) => getNextProduct(current))}
               onAddDetailToCart={handleAddCurrentStory}
               onAddCatalogToCart={handleAddCatalogItem}
-              onOpenCart={openCartDrawer}
               onBrowseCollection={openShopSection}
+              onProductClick={handleProductClick}
             />
           }
         />
@@ -474,6 +470,17 @@ function AppShell() {
           }}
         />
       ) : null}
+
+      {!isAdminRoute && selectedProduct && (
+        <ProductDetailModal
+          item={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={async (item) => {
+            setSelectedProduct(null);
+            await handleAddCatalogItem(item);
+          }}
+        />
+      )}
 
       {!isAdminRoute ? <Footer /> : null}
     </>

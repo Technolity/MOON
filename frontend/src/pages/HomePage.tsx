@@ -1,6 +1,7 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { HeroProductMedia } from '../components/HeroProductMedia';
 import { productStories } from '../data/products';
-import type { CatalogItem, ProductKey, ProductStory } from '../types';
+import type { CatalogItem, ProductKey } from '../types';
 
 const CAROUSEL_PRODUCTS: ProductKey[] = ['shilajit', 'kashmiriSaffron', 'kashmiriHoney'];
 const CAROUSEL_MS = 6000;
@@ -12,13 +13,13 @@ interface CarouselTheme {
 }
 
 const THEMES: Record<ProductKey, CarouselTheme> = {
-  shilajit:        { primary: '#2C1810', accent: '#7C4A2A', glow: '44,24,16' },
+  shilajit: { primary: '#2C1810', accent: '#7C4A2A', glow: '44,24,16' },
   kashmiriSaffron: { primary: '#C44A0C', accent: '#E8730A', glow: '196,74,12' },
-  kashmiriHoney:   { primary: '#8B6000', accent: '#C8960A', glow: '139,96,0' },
-  iraniSaffron:    { primary: '#D8A03F', accent: '#C8901F', glow: '216,160,63' },
+  kashmiriHoney: { primary: '#8B6000', accent: '#C8960A', glow: '139,96,0' },
+  iraniSaffron: { primary: '#D8A03F', accent: '#C8901F', glow: '216,160,63' },
   kashmiriAlmonds: { primary: '#CBA674', accent: '#A87854', glow: '203,166,116' },
-  walnuts:         { primary: '#9E7A52', accent: '#7E5A32', glow: '158,122,82' },
-  kashmiriGhee:    { primary: '#F1B65A', accent: '#E8A040', glow: '241,182,90' },
+  walnuts: { primary: '#9E7A52', accent: '#7E5A32', glow: '158,122,82' },
+  kashmiriGhee: { primary: '#F1B65A', accent: '#E8A040', glow: '241,182,90' },
 };
 
 const EDITORIAL_SLIDES = [
@@ -76,26 +77,21 @@ const CATEGORIES = [
 ];
 
 interface HomePageProps {
-  activeProduct: ProductKey;
-  activeStory: ProductStory;
   catalogItems: CatalogItem[];
-  canvasRef: RefObject<HTMLCanvasElement>;
-  onPrevProduct: () => void;
-  onNextProduct: () => void;
   onSelectProduct: (key: ProductKey) => void;
   onAddDetailToCart: () => void;
   onAddCatalogToCart: (item: { id: string; title: string; price: number }) => void;
-  onOpenCart: () => void;
   onBrowseCollection: () => void;
+  onProductClick: (item: CatalogItem) => void;
 }
 
 export function HomePage({
   catalogItems,
-  canvasRef,
   onSelectProduct,
   onAddDetailToCart,
   onAddCatalogToCart,
   onBrowseCollection,
+  onProductClick,
 }: HomePageProps) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [animKey, setAnimKey] = useState(0);
@@ -106,8 +102,8 @@ export function HomePage({
   const [editorialFading, setEditorialFading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const activeKey   = CAROUSEL_PRODUCTS[slideIndex];
-  const theme       = THEMES[activeKey];
+  const activeKey = CAROUSEL_PRODUCTS[slideIndex];
+  const theme = THEMES[activeKey];
   const activeStory = productStories[activeKey];
 
   const catalogByKey = useMemo(() =>
@@ -161,13 +157,13 @@ export function HomePage({
   };
 
   return (
-    <main id="main-content" className="bg-white text-zinc-900">
+    <main id="main-content" style={{ background: 'var(--paper-0, #FAF6EF)', color: 'var(--ink-0, #0B0806)' }}>
 
       {/* ── HERO CAROUSEL ───────────────────────────────────────────── */}
       <section
         id="sanctuary"
         className="relative min-h-[100svh] overflow-hidden"
-        style={{ background: '#FAFAF7' }}
+        style={{ background: 'var(--paper-0, #FAF6EF)' }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -202,11 +198,27 @@ export function HomePage({
           }}
         />
 
+        {/* ── HERO MEDIA — positioned relative to section (full-width) ── */}
+        <HeroProductMedia
+          activeItem={activeItem}
+          activeProduct={activeKey}
+          activeStory={activeStory}
+          glow={theme.glow}
+        />
+
         {/* ── SPLIT LAYOUT ── */}
         <div className="relative flex min-h-[100svh]" style={{ zIndex: 10 }}>
 
           {/* LEFT PANEL — editorial text content */}
-          <div className="flex w-full flex-col justify-center overflow-hidden px-8 pb-28 pt-32 md:w-[48%] md:px-14 lg:px-20 xl:px-24">
+          <div className="relative flex w-full flex-col justify-start overflow-hidden px-8 pb-12 pt-28 md:w-[48%] md:justify-center md:px-14 md:pb-28 md:pt-32 lg:px-20 xl:px-24">
+            {/* Mobile gradient scrim so text is readable over the full-bleed video */}
+            <div
+              className="absolute inset-0 pointer-events-none md:hidden"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(250,246,239,0.60) 0%, rgba(250,246,239,0.82) 100%)',
+                zIndex: 0,
+              }}
+            />
 
             {/* Slide counter + eyebrow */}
             <p
@@ -293,7 +305,11 @@ export function HomePage({
                   type="button"
                   onClick={onAddDetailToCart}
                   className="px-9 py-3.5 font-headline text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:scale-[0.98]"
-                  style={{ background: theme.primary }}
+                  style={{
+                    background: theme.primary,
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                  }}
                 >
                   Shop Now
                 </button>
@@ -304,7 +320,9 @@ export function HomePage({
                   style={{
                     border: `1.5px solid rgba(${theme.glow},0.45)`,
                     color: theme.primary,
-                    background: 'transparent',
+                    background: 'rgba(250,246,239,0.25)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
                   }}
                 >
                   Explore
@@ -313,50 +331,6 @@ export function HomePage({
             </div>
           </div>
 
-          {/* RIGHT PANEL — scroll-driven frame animation, bleeds to edge */}
-          <div
-            className="absolute right-0 top-0 hidden h-full w-[55%] overflow-hidden md:block"
-            style={{ zIndex: 15 }}
-          >
-            {/* Warm radial glow behind canvas */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                zIndex: 1,
-                background: `radial-gradient(ellipse 70% 75% at 55% 50%, rgba(${theme.glow},0.10), transparent 70%)`,
-                transition: 'background 0.9s ease',
-              }}
-            />
-            {/* Frame animation canvas — scroll-driven + auto-advance */}
-            <canvas
-              ref={canvasRef}
-              aria-label={`${activeStory.featureName} product animation`}
-              className="hero-product-enter absolute inset-0 h-full w-full"
-              style={{ zIndex: 2, display: 'block' }}
-            />
-            {/* Left feather — blends canvas into white left panel */}
-            <div
-              className="absolute inset-y-0 left-0 pointer-events-none"
-              style={{
-                zIndex: 3,
-                width: '140px',
-                background: 'linear-gradient(to right, #FAFAF7 0%, rgba(250,250,247,0.6) 60%, transparent 100%)',
-              }}
-            />
-          </div>
-
-          {/* MOBILE: static frame as fallback */}
-          <div
-            className="absolute bottom-16 left-0 right-0 flex h-[38vh] items-end justify-center overflow-hidden md:hidden"
-            style={{ zIndex: 5 }}
-          >
-            <img
-              key={`img-m-${animKey}`}
-              src={activeItem?.image ?? '/moon333/ezgif-frame-001.jpg'}
-              alt={activeItem?.alt ?? activeStory.featureName}
-              className="hero-product-enter h-full w-auto object-contain"
-            />
-          </div>
         </div>
 
         {/* ── CAROUSEL DOTS — pill style ── */}
@@ -396,42 +370,50 @@ export function HomePage({
       </section>
 
       {/* ── MARQUEE ─────────────────────────────────────────────────── */}
-      <section className="overflow-hidden border-y border-zinc-200/60 bg-zinc-50 py-5">
-        <div className="flex whitespace-nowrap" style={{ animation: 'marquee 40s linear infinite' }}>
-          {[0, 1].map((i) => (
-            <div
-              key={`marquee-${i}`}
-              className="mr-12 flex flex-shrink-0 items-center gap-10 font-display text-3xl uppercase tracking-tight text-zinc-300 md:text-5xl"
-            >
-              <span>MOON RITUALS</span>
-              <span style={{ color: theme.primary }}>•</span>
-              <span>PROPHETIC WELLNESS</span>
-              <span style={{ color: theme.primary }}>•</span>
-              <span>PURE ORIGINS</span>
-              <span style={{ color: theme.primary }}>•</span>
-            </div>
-          ))}
+      <section style={{ background: 'var(--ink-0, #0B0806)', overflow: 'hidden', padding: '14px 0' }}>
+        <div style={{ display: 'flex', animation: 'marquee 40s linear infinite', whiteSpace: 'nowrap' }}>
+          {['MOON RITUALS', 'PROPHETIC WELLNESS', 'PURE ORIGINS', 'HIMALAYAN · KASHMIRI · ORCHARD', 'NATURALLY YOURS',
+            'MOON RITUALS', 'PROPHETIC WELLNESS', 'PURE ORIGINS', 'HIMALAYAN · KASHMIRI · ORCHARD', 'NATURALLY YOURS',
+            'MOON RITUALS', 'PROPHETIC WELLNESS', 'PURE ORIGINS', 'HIMALAYAN · KASHMIRI · ORCHARD', 'NATURALLY YOURS'].map((p, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 16, paddingRight: 32 }}>
+                <span style={{
+                  fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.22em',
+                  color: 'rgba(250,246,239,0.7)',
+                }}>{p}</span>
+                <span style={{ color: 'var(--saffron-500, #D2571B)', fontSize: 14 }}>·</span>
+              </span>
+            ))}
         </div>
       </section>
 
       {/* ── SHOP BY CATEGORY ────────────────────────────────────────── */}
-      <section className="px-6 pt-14 pb-6 md:px-16 bg-white">
-        <div className="mx-auto w-full max-w-7xl">
-          <p className="mb-5 font-display text-xs uppercase tracking-[0.35em] text-zinc-400">
-            Shop by Category
-          </p>
-          <div className="flex flex-wrap gap-2">
+      <section style={{ background: 'var(--paper-0, #FAF6EF)', padding: 'clamp(32px,6vw,56px) clamp(16px,4vw,64px) 20px' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto' }}>
+          <div style={{
+            fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+            fontSize: '0.6875rem', letterSpacing: '0.28em',
+            textTransform: 'uppercase', fontWeight: 700,
+            color: 'var(--ink-3, #8A7A66)', marginBottom: 16,
+          }}>The Archive · 06 Essentials</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {CATEGORIES.map(({ label }, idx) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => { setActiveCategoryIndex(idx); onBrowseCollection(); }}
-                className="border px-5 py-2.5 font-label text-xs uppercase tracking-[0.16em] transition-all duration-200 hover:-translate-y-px"
-                style={
-                  idx === activeCategoryIndex
-                    ? { borderColor: theme.primary, color: theme.primary, background: `rgba(${theme.glow},0.08)` }
-                    : { borderColor: 'rgba(255,255,255,0.1)', color: '#71717a', background: 'transparent' }
-                }
+                style={{
+                  border: idx === activeCategoryIndex
+                    ? '1px solid var(--ink-0, #0B0806)'
+                    : '1px solid var(--hairline, rgba(11,8,6,0.12))',
+                  padding: '8px 20px',
+                  fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                  fontSize: '0.625rem', letterSpacing: '0.16em',
+                  textTransform: 'uppercase', fontWeight: 700,
+                  background: idx === activeCategoryIndex ? 'var(--ink-0, #0B0806)' : 'transparent',
+                  color: idx === activeCategoryIndex ? 'var(--paper-0, #FAF6EF)' : 'var(--ink-2, #4A3E31)',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
               >
                 {label}
               </button>
@@ -441,62 +423,144 @@ export function HomePage({
       </section>
 
       {/* ── PRODUCT COLLECTION ──────────────────────────────────────── */}
-      <section id="rituals" className="px-6 pb-24 pt-6 md:px-16 bg-white">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="mb-10 flex items-end justify-between">
+      <section id="rituals" style={{
+        background: 'var(--paper-0, #FAF6EF)',
+        padding: '16px clamp(16px,4vw,64px) clamp(48px,8vw,96px)',
+      }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto' }}>
+          <div style={{
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+            marginBottom: 32, flexWrap: 'wrap', gap: 16,
+          }}>
             <div>
-              <h2 className="font-display text-3xl uppercase tracking-tight text-zinc-900 md:text-4xl">
-                The Curated Collection
+              <h2 style={{
+                fontFamily: 'var(--font-serif, Fraunces, serif)',
+                fontSize: 'clamp(1.75rem, 3.6vw, 2.5rem)',
+                lineHeight: 1.12, letterSpacing: '-0.01em', fontWeight: 400,
+                color: 'var(--ink-0, #0B0806)', margin: 0,
+              }}>
+                Curated by origin, <em>not by trend.</em>
               </h2>
-              <p className="mt-2 font-label text-xs uppercase tracking-[0.18em] text-zinc-500">
-                Premium wellness, sourced from the Himalayas
+              <p style={{
+                marginTop: 8, fontFamily: 'var(--font-sans)', fontSize: '0.875rem',
+                color: 'var(--ink-2, #4A3E31)', maxWidth: '36ch',
+              }}>
+                Single-origin staples — each jar carries the place, season and hands that made it.
               </p>
             </div>
             <button
               type="button"
               onClick={onBrowseCollection}
-              className="hidden font-label text-xs uppercase tracking-[0.18em] text-zinc-500 transition hover:text-zinc-900 md:block"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                fontSize: '0.625rem', letterSpacing: '0.18em', textTransform: 'uppercase',
+                fontWeight: 700, color: 'var(--ink-0)',
+                borderBottom: '1px solid var(--ink-0)',
+                padding: '4px 0',
+              }}
             >
-              View All →
+              View full catalogue →
             </button>
           </div>
 
-          <div id="shop" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div id="shop" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
+            gap: 1,
+          }}>
             {catalogItems.map((item, idx) => (
               <article
                 key={item.id}
-                className="group relative overflow-hidden border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:border-zinc-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]"
-                style={{ animationDelay: `${idx * 60}ms` }}
+                className="group"
+                style={{
+                  border: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+                  background: 'var(--paper-0, #FAF6EF)',
+                  transition: 'transform 0.3s var(--ease-out), box-shadow 0.3s',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+                onClick={() => onProductClick(item)}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-lift)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                }}
               >
-                <div className="relative overflow-hidden bg-zinc-50">
+                <div style={{ position: 'relative', overflow: 'hidden', background: 'var(--paper-1)' }}>
                   <img
                     src={item.image}
                     alt={item.alt}
-                    className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-[1.06] md:h-60"
+                    className="group-hover:scale-[1.04]"
+                    style={{
+                      height: idx === 0 ? 340 : 260, width: '100%',
+                      objectFit: 'cover',
+                      transition: 'transform 700ms var(--ease-out)',
+                      display: 'block',
+                    }}
                   />
                   {item.featured && (
-                    <span className="absolute left-3 top-3 bg-zinc-100 px-2 py-1 font-label text-[9px] uppercase tracking-[0.22em] text-zinc-900">
-                      Signature
-                    </span>
+                    <span style={{
+                      position: 'absolute', left: 12, top: 12,
+                      background: 'var(--saffron-500, #D2571B)', color: '#fff',
+                      padding: '4px 10px',
+                      fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
+                      letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 700,
+                    }}>Best Seller</span>
                   )}
-                  {/* Hover overlay CTA */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100" style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(11,8,6,0.55)',
+                    transition: 'opacity 0.3s',
+                  }}>
                     <button
                       type="button"
                       onClick={() => onAddCatalogToCart(item)}
-                      className="border border-white/80 px-6 py-2.5 font-label text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur-sm transition-all hover:bg-white hover:text-zinc-900"
+                      style={{
+                        border: '1px solid rgba(250,246,239,0.8)',
+                        background: 'transparent',
+                        color: '#fff', padding: '10px 24px',
+                        fontFamily: 'var(--font-mark)', fontSize: '0.625rem',
+                        letterSpacing: '0.20em', textTransform: 'uppercase', fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'background 0.2s, color 0.2s',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.background = '#fff';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--ink-0)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        (e.currentTarget as HTMLElement).style.color = '#fff';
+                      }}
                     >
-                      Add to Cart
+                      Quick Add
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-end justify-between p-5">
-                  <div>
-                    <h3 className="font-headline text-base font-semibold text-zinc-900">{item.title}</h3>
-                    <p className="mt-0.5 text-xs text-zinc-500">{item.subtitle}</p>
+                <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{
+                    fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
+                    letterSpacing: '0.22em', textTransform: 'uppercase',
+                    color: 'var(--ink-3, #8A7A66)',
+                  }}>{item.subtitle || 'Moon · Origin'}</div>
+                  <h3 style={{
+                    fontFamily: 'var(--font-serif, Fraunces, serif)',
+                    fontSize: '1.125rem', fontWeight: 500,
+                    color: 'var(--ink-0, #0B0806)', margin: 0,
+                  }}>{item.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>★★★★★</span>
+                    <span style={{
+                      fontFamily: 'var(--font-serif, Fraunces, serif)',
+                      fontSize: '1.25rem', fontWeight: 500,
+                      color: 'var(--ink-0)',
+                    }}>{fmt(item.price)}</span>
                   </div>
-                  <p className="font-headline text-lg font-bold text-zinc-900">{fmt(item.price)}</p>
                 </div>
               </article>
             ))}
@@ -505,14 +569,14 @@ export function HomePage({
       </section>
 
       {/* ── EDITORIAL / BRAND STORY — live frame slideshow ──────────── */}
-      <section id="archives" className="bg-stone-50 overflow-hidden">
+      <section id="archives" style={{ background: 'var(--paper-1, #F4EDE2)', overflow: 'hidden' }}>
         <div className="mx-auto grid w-full max-w-7xl md:grid-cols-2">
 
           {/* LEFT — static product image with cross-fade between slides */}
           <div className="group relative h-[420px] overflow-hidden md:h-[640px]">
             {/* Static mid-point frame — grayscale by default, full color on hover */}
             <img
-              src={`${EDITORIAL_SLIDES[editorialSlide].folder}/ezgif-frame-096.jpg`}
+              src={`${EDITORIAL_SLIDES[editorialSlide].folder}/ezgif-frame-096.png`}
               alt={EDITORIAL_SLIDES[editorialSlide].title}
               className="absolute inset-0 h-full w-full object-cover grayscale group-hover:grayscale-0"
               style={{
@@ -620,82 +684,184 @@ export function HomePage({
       </section>
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
-      <section className="border-y border-zinc-200 bg-white px-6 py-16 md:px-16">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-10 md:grid-cols-4">
+      <section style={{
+        background: 'var(--paper-1, #F4EDE2)',
+        borderTop: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+        borderBottom: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+        padding: 'clamp(48px,8vw,80px) clamp(16px,4vw,64px)',
+      }}>
+        <div style={{
+          maxWidth: 1320, margin: '0 auto',
+          display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'clamp(24px,5vw,48px)',
+        }} className="md:grid-cols-4">
           {STATS.map(({ value, label }) => (
-            <div key={label} className="text-center">
-              <p className="font-display text-3xl font-bold md:text-4xl" style={{ color: theme.accent }}>
-                {value}
-              </p>
-              <p className="mt-2 font-label text-[10px] uppercase tracking-[0.18em] text-zinc-500">{label}</p>
+            <div key={label} style={{ textAlign: 'center' }}>
+              <p style={{
+                fontFamily: 'var(--font-serif, Fraunces, serif)',
+                fontSize: 'clamp(2rem,5vw,3.5rem)',
+                fontWeight: 300, lineHeight: 1,
+                color: 'var(--saffron-500, #D2571B)',
+                letterSpacing: '-0.02em', margin: 0,
+              }}>{value}</p>
+              <p style={{
+                marginTop: 10,
+                fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                fontSize: '0.625rem', letterSpacing: '0.18em',
+                textTransform: 'uppercase', color: 'var(--ink-3, #8A7A66)',
+              }}>{label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── TESTIMONIALS ────────────────────────────────────────────── */}
-      <section className="bg-white px-6 py-24 md:px-16">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="mb-12 text-center">
-            <h2 className="font-display text-3xl uppercase tracking-tight text-zinc-900 md:text-4xl">
-              Trusted by Our Community
+      <section style={{
+        background: 'var(--paper-0, #FAF6EF)',
+        padding: 'clamp(48px,8vw,96px) clamp(16px,4vw,64px)',
+      }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div style={{
+              fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+              fontSize: '0.6875rem', letterSpacing: '0.28em',
+              textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 16,
+            }}>Voices · The Private List</div>
+            <h2 style={{
+              fontFamily: 'var(--font-serif, Fraunces, serif)',
+              fontSize: 'clamp(1.75rem, 3.6vw, 2.5rem)',
+              lineHeight: 1.12, fontWeight: 400, letterSpacing: '-0.01em',
+              color: 'var(--ink-0)', margin: 0,
+            }}>
+              Thousands of Indian <em>households</em>, one origin.
             </h2>
-            <p className="mt-3 font-label text-xs uppercase tracking-[0.22em] text-zinc-500">
-              Real experiences from MOON ritual practitioners
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: 24,
+          }}>
             {TESTIMONIALS.map(({ name, role, quote, rating }) => (
-              <article
+              <figure
                 key={name}
-                className="border border-zinc-200 bg-zinc-50 p-6 transition-all duration-300 hover:border-zinc-300"
+                style={{
+                  border: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+                  background: 'var(--paper-0)',
+                  padding: '28px 24px',
+                  margin: 0,
+                  boxShadow: 'var(--shadow-1)',
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-2)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-1)';
+                }}
               >
-                <div className="mb-4 flex gap-0.5" aria-label={`${rating} stars`}>
+                <div style={{ marginBottom: 16 }} aria-label={`${rating} stars`}>
                   {Array.from({ length: rating }).map((_, i) => (
-                    <span key={i} className="text-amber-500 text-sm" aria-hidden>★</span>
+                    <span key={i} style={{ color: 'var(--saffron-500, #D2571B)', fontSize: 14 }} aria-hidden>★</span>
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed text-zinc-600">"{quote}"</p>
-                <div className="mt-6 border-t border-zinc-200 pt-4">
-                  <p className="font-headline text-sm font-semibold text-zinc-900">{name}</p>
-                  <p className="mt-0.5 font-label text-[10px] uppercase tracking-[0.16em] text-zinc-500">{role}</p>
-                </div>
-              </article>
+                <blockquote style={{
+                  fontFamily: 'var(--font-serif, Fraunces, serif)',
+                  fontStyle: 'italic', fontSize: '1rem',
+                  lineHeight: 1.6, color: 'var(--ink-1, #1F1811)',
+                  margin: 0, marginBottom: 20,
+                }}>"{quote}"</blockquote>
+                <figcaption style={{
+                  borderTop: '1px solid var(--hairline, rgba(11,8,6,0.12))',
+                  paddingTop: 16,
+                }}>
+                  <strong style={{
+                    fontFamily: 'var(--font-sans)', fontSize: '0.875rem',
+                    fontWeight: 700, color: 'var(--ink-0)',
+                    display: 'block',
+                  }}>{name}</strong>
+                  <span style={{
+                    fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
+                    letterSpacing: '0.16em', textTransform: 'uppercase',
+                    color: 'var(--ink-3)', marginTop: 4, display: 'block',
+                  }}>{role}</span>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>
       </section>
 
       {/* ── NEWSLETTER ──────────────────────────────────────────────── */}
-      <section id="about" className="bg-stone-50 px-6 py-24 md:px-16">
-        <div className="mx-auto w-full max-w-4xl border border-zinc-200 p-8 md:p-14">
-          <div className="grid gap-10 md:grid-cols-2 md:items-center">
+      <section id="journal" style={{
+        background: 'var(--paper-1, #F4EDE2)',
+        padding: 'clamp(48px,8vw,96px) clamp(16px,4vw,64px)',
+      }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto' }}>
+          <div style={{
+            display: 'grid',
+            gap: 'clamp(32px,6vw,80px)', alignItems: 'center',
+          }} className="grid-cols-1 md:grid-cols-2">
             <div>
-              <p className="font-display text-xs uppercase tracking-[0.3em] text-zinc-400">The Archive</p>
-              <h2 className="mt-4 font-display text-3xl uppercase leading-tight text-zinc-900 md:text-4xl">
-                Join the<br />Private List
+              <div style={{
+                fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                fontSize: '0.6875rem', letterSpacing: '0.28em',
+                textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 16,
+              }}>Join the Private List</div>
+              <h2 style={{
+                fontFamily: 'var(--font-serif, Fraunces, serif)',
+                fontSize: 'clamp(1.75rem, 3.6vw, 2.5rem)',
+                lineHeight: 1.12, fontWeight: 400, letterSpacing: '-0.01em',
+                color: 'var(--ink-0)', margin: '0 0 20px',
+              }}>
+                Letters, <em>not</em> marketing.
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-zinc-600">
-                Harvest drops, batch releases, and editorial updates from the MOON wellness studio — delivered to your inbox.
+              <p style={{
+                fontFamily: 'var(--font-sans)', fontSize: '1.125rem',
+                lineHeight: 1.75, color: 'var(--ink-2)', maxWidth: '40ch',
+              }}>
+                A quarterly letter from the moon archive — harvest notes from our growers, small-batch drops, and the occasional recipe. Nothing you could call a newsletter.
               </p>
             </div>
-            <form className="space-y-3" onSubmit={onNewsletterSubmit} id="newsletter">
-              <input
-                type="email"
-                placeholder="Your email address"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                className="w-full border border-zinc-300 bg-white px-4 py-3.5 font-label text-sm text-zinc-800 outline-none placeholder:text-zinc-400 transition focus:border-zinc-500"
-                aria-label="Email address"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full bg-zinc-900 py-3.5 font-headline text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-zinc-700 active:scale-[0.99]"
-              >
-                Subscribe to Archive
-              </button>
+            <form style={{ display: 'flex', flexDirection: 'column', gap: 12 }} onSubmit={onNewsletterSubmit} id="newsletter">
+              <div className="flex flex-col sm:flex-row" style={{ gap: 0 }}>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  aria-label="Email address"
+                  required
+                  style={{
+                    flex: 1,
+                    border: '1px solid var(--hairline-strong, rgba(11,8,6,0.22))',
+                    background: 'var(--paper-0)',
+                    padding: '14px 16px',
+                    fontFamily: 'var(--font-sans)', fontSize: '0.875rem',
+                    color: 'var(--ink-0)', outline: 'none',
+                    minWidth: 0,
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    background: 'var(--saffron-500, #D2571B)', color: '#fff',
+                    border: 'none', padding: '14px 28px',
+                    fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
+                    letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--saffron-400, #E67336)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--saffron-500, #D2571B)'; }}
+                >
+                  Subscribe
+                </button>
+              </div>
+              <p style={{
+                fontSize: '0.6875rem', color: 'var(--ink-3)', letterSpacing: '0.04em',
+              }}>
+                No spam, no affiliate links. One letter per season.
+              </p>
             </form>
           </div>
         </div>

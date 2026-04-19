@@ -1,30 +1,160 @@
+/* ─── MOON DESIGN SYSTEM v1 — warm paper palette ───────────────── */
 :root {
-    --theme-primary: #2C1810;
-    --theme-secondary: #f4e8d4;
-    --theme-accent: #7C4A2A;
+  /* Paper backgrounds */
+  --paper-0: #FAF6EF;
+  --paper-1: #F4EDE2;
+  --paper-2: #ECE2D1;
+  --paper-3: #E0D3BC;
+  /* Ink text */
+  --ink-0: #0B0806;
+  --ink-1: #1F1811;
+  --ink-2: #4A3E31;
+  --ink-3: #8A7A66;
+  /* Saffron accent */
+  --saffron-600: #B63E0F;
+  --saffron-500: #D2571B;
+  --saffron-400: #E67336;
+  --saffron-100: #FCE4D3;
+  /* Product accents */
+  --amber-500: #C58A1E;
+  --amber-100: #F6E5BE;
+  --resin-500: #5A3921;
+  --moss-500: #6B855A;
+  --moss-100: #DCE4D4;
+  /* Semantic aliases */
+  --fg-primary: var(--ink-0);
+  --fg-secondary: var(--ink-2);
+  --fg-muted: var(--ink-3);
+  --fg-inverse: var(--paper-0);
+  --bg-page: var(--paper-0);
+  --bg-alt: var(--paper-1);
+  --bg-elevated: #FFFFFF;
+  --bg-deep: var(--ink-0);
+  --brand: var(--saffron-500);
+  --brand-strong: var(--saffron-600);
+  --brand-soft: var(--saffron-100);
+  /* Lines */
+  --hairline: rgba(11, 8, 6, 0.12);
+  --hairline-strong: rgba(11, 8, 6, 0.22);
+  --hairline-dark: rgba(250, 246, 239, 0.18);
+  /* Shadows — warm tinted */
+  --shadow-1: 0 1px 2px rgba(42,27,16,0.06), 0 1px 1px rgba(42,27,16,0.04);
+  --shadow-2: 0 4px 14px rgba(42,27,16,0.08), 0 2px 4px rgba(42,27,16,0.04);
+  --shadow-3: 0 18px 40px rgba(42,27,16,0.10), 0 4px 10px rgba(42,27,16,0.05);
+  --shadow-lift: 0 30px 60px -20px rgba(42,27,16,0.24), 0 10px 20px -10px rgba(42,27,16,0.10);
+  /* Radii */
+  --r-none: 0; --r-xs: 2px; --r-sm: 4px; --r-pill: 999px;
+  /* Spacing */
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;
+  --s-6:24px;--s-8:32px;--s-10:40px;--s-12:48px;--s-16:64px;
+  --s-20:80px;--s-24:96px;--s-32:128px;
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms; --dur-base: 280ms; --dur-slow: 520ms; --dur-cine: 900ms;
+  /* Typography */
+  --font-serif: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mark: 'Syncopate', 'Manrope', sans-serif;
+  /* Type scale */
+  --text-11:0.6875rem;--text-12:0.75rem;--text-13:0.8125rem;
+  --text-14:0.875rem;--text-16:1rem;--text-18:1.125rem;
+  --text-20:1.25rem;--text-24:1.5rem;--text-32:2rem;
+  --text-40:2.5rem;--text-56:3.5rem;--text-72:4.5rem;--text-96:6rem;
+  /* Line heights */
+  --lh-tight:1.02;--lh-snug:1.12;--lh-normal:1.4;--lh-relaxed:1.6;--lh-loose:1.75;
+  /* Tracking */
+  --tr-display:-0.02em;--tr-heading:-0.01em;--tr-body:0;
+  --tr-label:0.14em;--tr-eyebrow:0.28em;--tr-mark:0.16em;
 
-    --text-primary: #1A0E08;
-    --text-secondary: #4A3728;
-    --text-light: #7A6258;
-    --text-inverse: #FAFAF7;
-
-    --bg-primary: #FAFAF7;
-    --bg-secondary: #F5F0EA;
-    --bg-tertiary: #EDE6DC;
-
-    --surface: rgba(0, 0, 0, 0.03);
-    --surface-strong: rgba(0, 0, 0, 0.06);
-    --border-color: rgba(0, 0, 0, 0.10);
-    --border-color-strong: rgba(0, 0, 0, 0.20);
-
-    --hero-overlay: linear-gradient(110deg, rgba(250, 250, 247, 0.85) 10%, rgba(250, 250, 247, 0.5) 45%, rgba(250, 250, 247, 0.92) 100%);
-
-    --font-display: 'Syncopate', sans-serif;
-    --font-main: 'Manrope', sans-serif;
-
-    --max-width: 1200px;
-    --transition: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Legacy compat aliases */
+  --theme-primary: var(--ink-0);
+  --theme-secondary: var(--saffron-500);
+  --theme-accent: var(--saffron-400);
+  --text-primary: var(--ink-0);
+  --text-secondary: var(--ink-2);
+  --text-light: var(--ink-3);
+  --text-inverse: var(--paper-0);
+  --bg-primary: var(--paper-0);
+  --bg-secondary: var(--paper-1);
+  --bg-tertiary: var(--paper-2);
+  --surface: rgba(250,246,239,0.6);
+  --surface-strong: rgba(250,246,239,0.9);
+  --border-color: var(--hairline);
+  --border-color-strong: var(--hairline-strong);
+  --hero-overlay: linear-gradient(110deg, rgba(250,246,239,0.85) 10%, rgba(250,246,239,0.5) 45%, rgba(250,246,239,0.92) 100%);
+  --font-display: 'Syncopate', sans-serif;
+  --font-main: 'Manrope', sans-serif;
+  --max-width: 1200px;
+  --transition: 240ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Warm radial paper body — merged from duplicate declarations */
+
+/* Material Symbols thin weight */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' -25, 'opsz' 24;
+}
+
+/* Moon semantic type classes */
+.moon-eyebrow {
+  font-family: var(--font-mark);
+  font-size: var(--text-11);
+  letter-spacing: var(--tr-eyebrow);
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+.moon-h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3.6vw, var(--text-40));
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tr-heading);
+  font-weight: 400;
+  color: var(--fg-primary);
+}
+.moon-lede {
+  font-family: var(--font-sans);
+  font-size: var(--text-18);
+  line-height: var(--lh-loose);
+  font-weight: 400;
+  color: var(--fg-secondary);
+  max-width: 58ch;
+}
+.moon-body-sm {
+  font-family: var(--font-sans);
+  font-size: var(--text-14);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-secondary);
+}
+.moon-btn-primary {
+  background: var(--ink-0); color: var(--paper-0); border: 0;
+  padding: 16px 32px; font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; font-weight: 700; cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+}
+.moon-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.moon-btn-primary:active { transform: scale(.98); }
+.moon-btn-saffron {
+  background: var(--saffron-500); color: #fff; border: 0;
+  padding: 16px 32px; font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; font-weight: 700; cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+}
+.moon-btn-saffron:hover { background: var(--saffron-400); transform: translateY(-1px); }
+.moon-btn-ghost {
+  background: transparent; color: var(--fg-primary); border: 0;
+  padding: 14px 0; font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; font-weight: 700; cursor: pointer;
+  border-bottom: 1px solid var(--ink-0); transition: all .2s;
+}
+.moon-btn-ghost:hover { color: var(--saffron-600); border-bottom-color: var(--saffron-600); }
+.moon-arrow-link {
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  font-weight: 700; color: var(--fg-primary); cursor: pointer;
+  border-bottom: 1px solid var(--ink-0); transition: color .2s, border-color .2s;
+}
+.moon-arrow-link:hover { color: var(--saffron-600); border-bottom-color: var(--saffron-600); }
 
 body[data-theme="saffron"] {
     --theme-primary: #C44A0C;
@@ -61,15 +191,16 @@ body[data-theme="shilajit"] {
 
 html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
 }
 
 body {
     font-family: var(--font-main);
     background:
-        radial-gradient(1400px 900px at 10% -10%, rgba(255, 255, 255, 0.08), transparent 55%),
-        radial-gradient(900px 500px at 85% 15%, rgba(255, 255, 255, 0.06), transparent 60%),
-        var(--bg-primary);
-    color: var(--text-primary);
+        radial-gradient(1200px 600px at 12% -10%, rgba(210,87,27,0.05), transparent 55%),
+        radial-gradient(900px 500px at 88% 110%, rgba(197,138,30,0.05), transparent 55%),
+        var(--bg-page, #FAF6EF);
+    color: var(--fg-primary, #0B0806);
     line-height: 1.5;
     transition: background-color 600ms ease, color var(--transition);
     overflow-x: hidden;
@@ -162,6 +293,7 @@ input {
 
 .navbar.scrolled {
     background: rgba(12, 10, 9, 0.72);
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     border-bottom-color: var(--border-color);
 }
@@ -354,6 +486,7 @@ input {
     border-radius: 999px;
     border: 1px solid var(--border-color);
     background: rgba(5, 4, 4, 0.44);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
 
@@ -959,6 +1092,7 @@ input {
 }
 
 .footer-social {
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 14px;
@@ -1443,7 +1577,6 @@ input {
         width: 100%;
         overflow-x: auto;
         justify-content: flex-start;
-        -webkit-overflow-scrolling: touch;
     }
 
     .pill-btn {

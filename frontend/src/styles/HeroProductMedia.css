@@ -1,0 +1,36 @@
+/* =========================================================
+   HeroProductMedia.css
+   Extracted from HeroProductMedia.tsx inline styles
+   ========================================================= */
+
+.hero-media-container {
+  z-index: 15;
+}
+
+.hero-media-glow {
+  z-index: 1;
+  transition: background 0.9s ease;
+}
+
+.hero-media-video {
+  z-index: 2;
+  transform: scale(1.08);
+  transform-origin: center center;
+}
+
+.hero-media-scrub-video {
+  z-index: 3;
+  transform: scale(1.08);
+  transform-origin: center center;
+}
+
+.hero-media-feather {
+  z-index: 4;
+  width: 140px;
+  background: linear-gradient(
+    to right,
+    var(--paper-0, #FAF6EF) 0%,
+    rgba(250, 246, 239, 0.6) 60%,
+    transparent 100%
+  );
+}

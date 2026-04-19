@@ -1,176 +1,80 @@
 import { useEffect, useRef } from 'react';
-import type { ProductKey } from '../types';
 
-const TOTAL_FRAMES = 192;
-const LERP_FACTOR  = 0.10; // how fast current frame chases target (lower = smoother)
-const AUTO_FPS     = 20;   // auto-advance when near top
+// px from top — in this zone the video loops freely (hero idle state)
+const AUTOPLAY_ZONE = 80;
+// base lerp; adaptive boost keeps up with fast scroll without big jumps
+const BASE_LERP = 0.14;
 
-const frameFolders: Partial<Record<ProductKey, string>> = {
-  shilajit:        '/moon333',
-  kashmiriSaffron: '/moon2222',
-  kashmiriHoney:   '/ezgif-2fae6b36993927b6-jpg',
-  iraniSaffron:    '/ezgif-2fae6b36993927b6-jpg',
-  kashmiriAlmonds: '/moon2222',
-  walnuts:         '/moon333',
-  kashmiriGhee:    '/ezgif-2fae6b36993927b6-jpg',
-};
-
-const createFrameSets = (): Record<ProductKey, HTMLImageElement[]> => ({
-  shilajit: [], kashmiriSaffron: [], kashmiriHoney: [],
-  iraniSaffron: [], kashmiriAlmonds: [], walnuts: [], kashmiriGhee: [],
-});
-
-const createCountRecord = (): Record<ProductKey, number> => ({
-  shilajit: 0, kashmiriSaffron: 0, kashmiriHoney: 0,
-  iraniSaffron: 0, kashmiriAlmonds: 0, walnuts: 0, kashmiriGhee: 0,
-});
-
-export function useStorytellingCanvas(activeProduct: ProductKey) {
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const ctxRef       = useRef<CanvasRenderingContext2D | null>(null);
-  const framesRef    = useRef<Record<ProductKey, HTMLImageElement[]>>(createFrameSets());
-  const countRef     = useRef<Record<ProductKey, number>>(createCountRecord());
-
-  // smooth animation state
-  const targetFrameRef  = useRef(0);
-  const currentFloatRef = useRef(0);
-  const lastDrawnRef    = useRef(-1);
-  const rafIdRef        = useRef<number | null>(null);
-  const scrollingRef    = useRef(false);
-  const autoRef         = useRef<ReturnType<typeof setInterval> | null>(null);
+export function useVideoScrubbing(activeProduct: string, enabled = true) {
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctxRef.current = ctx;
+    if (!enabled) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    /* ─── draw frame ─────────────────────────────────────────────── */
-    const draw = (idx: number, product: ProductKey) => {
-      const images = framesRef.current[product];
-      if (!images) return;
-      const clampedIdx = Math.max(0, Math.min(images.length - 1, idx));
-      const img = images[clampedIdx];
-      const cx = ctxRef.current;
-      const cv = canvasRef.current;
-      if (!img?.complete || img.naturalWidth === 0 || !cx || !cv) return;
+    let current = 0;       // tracked video time (seconds)
+    let rafId: number | null = null;
+    let inAutoplay = true; // whether we are in the looping hero zone
 
-      const dpr = window.devicePixelRatio || 1;
-      const cw  = cv.width  / dpr;
-      const ch  = cv.height / dpr;
-      cx.clearRect(0, 0, cw, ch);
-
-      const ia = img.naturalWidth / img.naturalHeight;
-      const ca = cw / ch;
-      let dw: number, dh: number, ox: number, oy: number;
-
-      // cover: fill panel, crop sides if needed
-      if (ia > ca) {
-        dh = ch; dw = dh * ia;
-        ox = (cw - dw) / 2; oy = 0;
-      } else {
-        dw = cw; dh = dw / ia;
-        ox = 0; oy = (ch - dh) / 2;
-      }
-      cx.drawImage(img, ox, oy, dw, dh);
-    };
-
-    /* ─── resize ─────────────────────────────────────────────────── */
-    const resize = () => {
-      const cv = canvasRef.current;
-      const cx = ctxRef.current;
-      if (!cv || !cx) return;
-      const dpr  = window.devicePixelRatio || 1;
-      const rect = cv.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      cv.width  = rect.width  * dpr;
-      cv.height = rect.height * dpr;
-      cx.setTransform(1, 0, 0, 1, 0, 0);
-      cx.scale(dpr, dpr);
-      draw(Math.round(currentFloatRef.current), activeProduct);
-    };
-
-    /* ─── rAF loop: lerp current → target ───────────────────────── */
     const tick = () => {
-      const target  = targetFrameRef.current;
-      const current = currentFloatRef.current;
-      const diff    = target - current;
+      const scrollY = window.scrollY;
 
-      if (Math.abs(diff) > 0.5) {
-        currentFloatRef.current = current + diff * LERP_FACTOR;
+      if (scrollY <= AUTOPLAY_ZONE) {
+        // ── Hero zone: play the video as a smooth loop ────────────────
+        inAutoplay = true;
+        if (!video.loop) video.loop = true;
+        if (video.paused) {
+          video.playbackRate = 1;
+          video.play().catch(() => {});
+        }
       } else {
-        currentFloatRef.current = target;
-      }
+        // ── Scroll zone: drive currentTime from scroll position ───────
+        if (inAutoplay) {
+          // Entering scrub mode: sync tracked position to actual time
+          // so there is no jump on the first seek
+          inAutoplay = false;
+          current = video.currentTime;
+          video.loop = false;
+        }
 
-      const idx = Math.round(currentFloatRef.current);
-      if (idx !== lastDrawnRef.current) {
-        draw(idx, activeProduct);
-        lastDrawnRef.current = idx;
-      }
+        if (video.duration) {
+          const fraction = Math.min(1, scrollY / window.innerHeight);
+          const target = fraction * video.duration;
+          const diff = target - current;
 
-      rafIdRef.current = requestAnimationFrame(tick);
-    };
-
-    /* ─── preload ────────────────────────────────────────────────── */
-    const preload = (product: ProductKey) => {
-      const folder = frameFolders[product];
-      if (!folder || framesRef.current[product].length > 0) return;
-
-      for (let i = 1; i <= TOTAL_FRAMES; i++) {
-        const img = new Image();
-        img.src = `${folder}/ezgif-frame-${String(i).padStart(3, '0')}.jpg`;
-        img.onload = () => {
-          countRef.current[product] = (countRef.current[product] || 0) + 1;
-          if (product === activeProduct && i === Math.round(currentFloatRef.current) + 1) {
-            draw(Math.round(currentFloatRef.current), activeProduct);
+          if (Math.abs(diff) > 0.006) {
+            // Adaptive lerp: larger gap → faster catch-up → fewer skipped frames
+            const rate = Math.min(1, BASE_LERP + Math.abs(diff) * 0.25);
+            current += diff * rate;
+            video.currentTime = current;
           }
-        };
-        framesRef.current[product].push(img);
+
+          // Pause so the browser holds the decoded frame (no free-running)
+          if (!video.paused) video.pause();
+        }
       }
+
+      rafId = requestAnimationFrame(tick);
     };
 
-    /* ─── scroll → target frame ──────────────────────────────────── */
-    const onScroll = () => {
-      scrollingRef.current = true;
-      const scrollTop  = window.pageYOffset || document.documentElement.scrollTop;
-      const heroHeight = window.innerHeight;
-      // map 0 → heroHeight scroll to frame 0 → TOTAL_FRAMES-1
-      const fraction   = Math.max(0, Math.min(1, scrollTop / heroHeight));
-      targetFrameRef.current = Math.floor(fraction * (TOTAL_FRAMES - 1));
+    const start = () => {
+      current = 0;
+      inAutoplay = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tick);
     };
 
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      window.requestAnimationFrame(() => { onScroll(); ticking = false; });
-      ticking = true;
-    };
-
-    /* ─── auto-advance when near top, not scrolled ───────────────── */
-    if (autoRef.current) clearInterval(autoRef.current);
-    autoRef.current = setInterval(() => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      if (scrollTop > 80) return; // stop when hero is scrolled past
-      targetFrameRef.current = (targetFrameRef.current + 1) % TOTAL_FRAMES;
-    }, 1000 / AUTO_FPS);
-
-    preload(activeProduct);
-    resize();
-
-    // start rAF loop
-    rafIdRef.current = requestAnimationFrame(tick);
-
-    window.addEventListener('resize', resize);
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    if (video.readyState >= 2) {
+      start();
+    } else {
+      video.addEventListener('loadeddata', start, { once: true });
+    }
 
     return () => {
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('scroll', handleScroll);
-      if (rafIdRef.current)  cancelAnimationFrame(rafIdRef.current);
-      if (autoRef.current)   clearInterval(autoRef.current);
+      if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [activeProduct]);
+  }, [enabled, activeProduct]);
 
-  return canvasRef;
+  return videoRef;
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { CartItem } from '../types';
+import '../styles/CartDrawer.css';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -11,6 +12,9 @@ interface CartDrawerProps {
   onCheckout: () => void;
 }
 
+const FREE_SHIP_THRESHOLD = 999;
+const SHIP_FEE = 75;
+
 export function CartDrawer({
   isOpen,
   items,
@@ -18,121 +22,165 @@ export function CartDrawer({
   onClose,
   onRemoveItem,
   onContinueShopping,
-  onCheckout
+  onCheckout,
 }: CartDrawerProps) {
+  const shipping = subtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIP_FEE;
+  const total = subtotal + shipping;
+  const progressPct = Math.min((subtotal / FREE_SHIP_THRESHOLD) * 100, 100);
+
   useEffect(() => {
     if (!isOpen) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
     };
-
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onClose]);
 
   return (
     <div
-      className={`fixed inset-0 z-[120] transition-opacity duration-300 ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-      aria-hidden={!isOpen}
+      className={`cart-drawer-overlay ${isOpen ? 'cart-drawer-overlay--open' : 'cart-drawer-overlay--closed'}`}
+      {...(!isOpen ? { 'aria-hidden': 'true' as const } : {})}
     >
+      {/* Scrim */}
       <button
         type="button"
-        className="absolute inset-0 h-full w-full cursor-default bg-black/50 backdrop-blur-[2px]"
+        aria-label="Close cart"
         onClick={onClose}
-        aria-label="Close cart sidebar"
+        className="cart-drawer-scrim"
       />
 
+      {/* Drawer */}
       <aside
-        className={`absolute right-0 top-0 h-full w-full max-w-[430px] border-l border-outline-variant/20 bg-surface shadow-2xl transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
         role="dialog"
         aria-modal="true"
         aria-label="Shopping cart"
+        className="cart-drawer-panel"
+        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
-        <div className="flex h-full flex-col">
-          <header className="flex items-center justify-between border-b border-outline-variant/20 px-6 py-5">
-            <div>
-              <h2 className="font-headline text-xl text-on-background">Your Cart</h2>
-              <p className="mt-1 font-label text-[10px] uppercase tracking-[0.16em] text-on-surface-variant">
-                {items.length} item{items.length === 1 ? '' : 's'}
-              </p>
+        {/* Header */}
+        <header className="cart-drawer-header">
+          <div>
+            <div className="cart-drawer-subtitle">
+              Your Cart · {items.length} item{items.length !== 1 ? 's' : ''}
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-background"
-              aria-label="Close cart"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </header>
+            <div className="cart-drawer-title">The Basket</div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close cart"
+            className="cart-drawer-close-btn"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </header>
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
-            {items.length === 0 ? (
-              <div className="rounded-none border border-outline-variant/20 bg-surface-container-low p-5">
-                <p className="text-sm text-on-surface-variant">Your cart is empty.</p>
-                <button
-                  type="button"
-                  onClick={onContinueShopping}
-                  className="mt-4 border border-outline-variant/30 px-4 py-2 font-label text-[10px] uppercase tracking-[0.16em] text-on-background transition-colors hover:border-secondary hover:text-secondary"
-                >
-                  Continue Shopping
-                </button>
+        {/* Free shipping progress */}
+        {items.length > 0 && (
+          <div className="cart-shipping-bar">
+            {shipping === 0 ? (
+              <div className="cart-shipping-unlocked">
+                ✓ Free shipping unlocked across India
               </div>
             ) : (
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <article
-                    key={item.id}
-                    className="flex items-start justify-between gap-4 border border-outline-variant/20 bg-surface-container-low p-4"
-                  >
-                    <div>
-                      <h3 className="font-headline text-sm uppercase tracking-[0.08em] text-on-background">{item.title}</h3>
-                      <p className="mt-2 text-sm text-on-surface-variant">
-                        ₹{item.price} x {item.quantity}
-                      </p>
+              <>
+                <div className="cart-shipping-remaining">
+                  Add ₹{(FREE_SHIP_THRESHOLD - subtotal).toLocaleString('en-IN')} for free shipping
+                </div>
+                <div className="cart-progress-track">
+                  <div
+                    className="cart-progress-fill"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Body */}
+        <div className="cart-drawer-body">
+          {items.length === 0 ? (
+            <div className="cart-empty">
+              <div className="cart-empty-title">Empty — for now.</div>
+              <p className="cart-empty-desc">
+                Add a jar from the shop and it'll live here.
+              </p>
+              <button
+                type="button"
+                onClick={onContinueShopping}
+                className="cart-continue-btn"
+              >Continue Shopping</button>
+            </div>
+          ) : (
+            <div className="cart-items-list">
+              {items.map((item) => (
+                <article key={item.id} className="cart-item">
+                  {item.image && (
+                    <div className="cart-item-image">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="cart-item-img"
+                      />
+                    </div>
+                  )}
+                  <div className="cart-item-info">
+                    <div className="cart-item-title">{item.title}</div>
+                    <div className="cart-item-pricing">
+                      <div className="cart-item-price-detail">
+                        ₹{item.price.toLocaleString('en-IN')} × {item.quantity}
+                      </div>
+                      <div className="cart-item-line-total">
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => onRemoveItem(item.id)}
-                      className="rounded-full p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-background"
-                      aria-label={`Remove ${item.title}`}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <footer className="border-t border-outline-variant/20 bg-surface-container-low px-6 py-5">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-label text-xs uppercase tracking-[0.12em] text-on-surface-variant">Subtotal</span>
-              <span className="font-headline text-xl text-secondary">₹{subtotal}</span>
+                      className="cart-item-remove"
+                    >Remove</button>
+                  </div>
+                </article>
+              ))}
             </div>
-            <div className="grid gap-3">
-              <button
-                type="button"
-                onClick={onCheckout}
-                className="bg-secondary px-5 py-3 font-headline text-xs font-semibold uppercase tracking-[0.18em] text-on-secondary-fixed transition hover:brightness-110"
-              >
-                Proceed to Checkout
-              </button>
-              <button
-                type="button"
-                onClick={onContinueShopping}
-                className="border border-outline-variant/30 bg-transparent px-5 py-3 font-headline text-xs font-semibold uppercase tracking-[0.18em] text-on-background transition-colors hover:bg-surface-container-high"
-              >
-                Continue Shopping
-              </button>
-            </div>
-          </footer>
+          )}
         </div>
+
+        {/* Footer */}
+        {items.length > 0 && (
+          <footer className="cart-drawer-footer">
+            <div className="cart-summary-row">
+              <span className="cart-summary-label">Subtotal</span>
+              <span className="cart-summary-value">₹{subtotal.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="cart-summary-row cart-summary-row--shipping">
+              <span className="cart-summary-label">Shipping</span>
+              <span className="cart-summary-value cart-summary-value--shipping">
+                {shipping === 0 ? 'Free' : `₹${shipping}`}
+              </span>
+            </div>
+            <div className="cart-total-row">
+              <span className="cart-total-label">Total</span>
+              <span className="cart-total-value">₹{total.toLocaleString('en-IN')}</span>
+            </div>
+            <button
+              type="button"
+              onClick={onCheckout}
+              className="cart-checkout-btn"
+            >Checkout →</button>
+            <button
+              type="button"
+              onClick={onContinueShopping}
+              className="cart-continue-btn cart-continue-btn--footer"
+            >Continue Shopping</button>
+            <p className="cart-footer-note">
+              Secure payment · UPI / Cards / NetBanking
+            </p>
+          </footer>
+        )}
       </aside>
     </div>
   );
 }
-

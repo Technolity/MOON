@@ -13,6 +13,7 @@ interface AddItemPayload {
   id: string;
   title: string;
   price: number;
+  image?: string;
   itemId?: string;
 }
 
@@ -34,6 +35,7 @@ const cartSlice = createSlice({
         id: action.payload.id,
         title: action.payload.title,
         price: action.payload.price,
+        image: action.payload.image,
         quantity: 1,
         itemId: action.payload.itemId
       });
