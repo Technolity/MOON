@@ -61,9 +61,9 @@ const EDITORIAL_SLIDES = [
 const SLIDESHOW_MS = 3200;
 
 const STATS = [
-  { value: '800+', label: 'Orders Delivered' },
-  { value: '5,000+', label: 'Happy Customers' },
-  { value: '100%', label: 'Pure & Lab Tested' },
+  { value: '1,200+', label: 'Orders Delivered' },
+  { value: '8,000+', label: 'Customers across India' },
+  { value: '100%', label: 'Origin-Verified' },
   { value: '4.9 ★', label: 'Average Rating' },
 ];
 
@@ -109,6 +109,7 @@ export function HomePage({
   // 0 = video only | 1 = CTA buttons visible | 2 = full details visible
   const [heroPhase, setHeroPhase] = useState<0 | 1 | 2>(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartX = useRef<number>(0);
   const advanceRef = useRef<() => void>(() => {});
@@ -134,14 +135,13 @@ export function HomePage({
   const goToSlide = useCallback((index: number) => {
     const newKey = SLIDE_CONFIG[index].productKey;
     const isSameProduct = newKey === SLIDE_CONFIG[slideIndex]?.productKey;
-    setHeroPhase(0);
+    // NOTE: do NOT set heroPhase here — phase effect handles it to avoid blank flash
     if (isSameProduct) {
-      // Same video — no crossfade, just update state
+      // Same video keeps playing — no crossfade, no animKey reset (text already in place)
       setSlideIndex(index);
-      setAnimKey((k) => k + 1);
       onSelectProduct(newKey);
     } else {
-      // New product — crossfade video out then in
+      // New product — crossfade video, reset text animations
       setIsTransitioning(true);
       setTimeout(() => {
         setSlideIndex(index);
@@ -153,27 +153,49 @@ export function HomePage({
   }, [slideIndex, onSelectProduct]);
 
   const advance = useCallback(() => {
-    goToSlide((slideIndex + 1) % TOTAL_SLIDES);
-  }, [slideIndex, goToSlide]);
+    if (isDesktop) {
+      const nextProduct = (Math.floor(slideIndex / 2) + 1) % (TOTAL_SLIDES / 2);
+      goToSlide(nextProduct * 2);
+    } else {
+      goToSlide((slideIndex + 1) % TOTAL_SLIDES);
+    }
+  }, [slideIndex, goToSlide, isDesktop]);
 
   // Keep advanceRef current so phase timers can call it without stale closure
   useEffect(() => { advanceRef.current = advance; }, [advance]);
 
-  // Phase cascade — different timings per slide type
   useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    setIsDesktop(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Phase cascade — driven by slide type, no intermediate resets
+  useEffect(() => {
+    if (isDesktop) {
+      if (isDetailSlide) {
+        // Desktop: skip detail slides instantly
+        const t = setTimeout(() => advanceRef.current(), 0);
+        return () => clearTimeout(t);
+      }
+      // Desktop: always show content, auto-advance after 9.5s
+      setHeroPhase(2);
+      const t = setTimeout(() => advanceRef.current(), 9500);
+      return () => clearTimeout(t);
+    }
     if (isDetailSlide) {
-      // Details slide: immediately show full content, 6s then auto-advance
       setHeroPhase(2);
       const t = setTimeout(() => advanceRef.current(), 6000);
       return () => clearTimeout(t);
     } else {
-      // Video slide: 0 → 4.5s → CTA buttons → 5s → auto-advance to details
       setHeroPhase(0);
       const t1 = setTimeout(() => setHeroPhase(1), 4500);
       const t2 = setTimeout(() => advanceRef.current(), 9500);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
-  }, [slideIndex, isDetailSlide]);
+  }, [slideIndex, isDetailSlide, isDesktop]);
 
   /* ── Editorial slideshow: cross-fade between slides ── */
   useEffect(() => {
@@ -272,10 +294,10 @@ export function HomePage({
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 30,
-          opacity: heroPhase === 1 ? 1 : 0,
-          transform: heroPhase === 1 ? 'translateY(0)' : 'translateY(14px)',
+          opacity: (!isDesktop && heroPhase === 1) ? 1 : 0,
+          transform: (!isDesktop && heroPhase === 1) ? 'translateY(0)' : 'translateY(14px)',
           transition: 'opacity 0.5s ease, transform 0.5s ease',
-          pointerEvents: heroPhase === 1 ? 'auto' : 'none',
+          pointerEvents: (!isDesktop && heroPhase === 1) ? 'auto' : 'none',
         }}>
           <button
             type="button"
@@ -329,7 +351,7 @@ export function HomePage({
                 background: 'linear-gradient(to bottom, rgba(250,246,239,0.55) 0%, rgba(250,246,239,0.88) 100%)',
                 zIndex: 0,
                 opacity: heroPhase >= 2 ? 1 : 0,
-                transition: 'opacity 0.8s ease',
+                transition: 'opacity 0.5s ease',
               }}
             />
 
@@ -337,15 +359,15 @@ export function HomePage({
             <p
               key={`label-${animKey}`}
               className="mb-5 font-display text-[10px] uppercase tracking-[0.44em] carousel-text-enter"
-              style={{ color: heroPhase >= 2 ? theme.accent : 'rgba(255,255,255,0.75)', position: 'relative', zIndex: 1, transition: 'color 0.6s ease' }}
+              style={{ color: (isDesktop || heroPhase >= 2) ? theme.accent : 'rgba(255,255,255,0.75)', position: 'relative', zIndex: 1, transition: 'color 0.6s ease' }}
             >
               {String(Math.floor(slideIndex / 2) + 1).padStart(2, '0')}&thinsp;/&thinsp;03&nbsp;&nbsp;·&nbsp;&nbsp;Himalayan Origin
             </p>
             {/* Content panel — fades in at phase 2 */}
             <div style={{
-              opacity: heroPhase >= 2 ? 1 : 0,
-              transform: heroPhase >= 2 ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.8s ease, transform 0.8s ease',
+              opacity: (isDesktop || heroPhase >= 2) ? 1 : 0,
+              transform: (isDesktop || heroPhase >= 2) ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity 0.5s ease, transform 0.55s ease',
               position: 'relative', zIndex: 1,
             }}>
 
@@ -460,7 +482,10 @@ export function HomePage({
           style={{ zIndex: 30 }}
         >
           {SLIDE_CONFIG.map((pos, i) => {
-            const isActive = i === slideIndex;
+            if (isDesktop && i % 2 !== 0) return null; // skip detail-slide dots on desktop
+            const isActive = isDesktop
+              ? Math.floor(i / 2) === Math.floor(slideIndex / 2)
+              : i === slideIndex;
             const isInGroup = Math.floor(i / 2) === Math.floor(slideIndex / 2);
             return (
               <>

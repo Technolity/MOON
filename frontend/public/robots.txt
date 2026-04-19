@@ -1,7 +1,11 @@
 User-agent: *
 Allow: /
 
-# Welcome AI search crawlers
+# Disallow transactional pages (not useful for search results)
+Disallow: /cart
+Disallow: /checkout
+
+# AI search crawlers — allow indexing and product discovery
 User-agent: GPTBot
 Allow: /
 
@@ -16,11 +20,15 @@ Allow: /
 
 User-agent: Googlebot
 Allow: /
+Disallow: /cart
+Disallow: /checkout
 
 User-agent: Bingbot
 Allow: /
+Disallow: /cart
+Disallow: /checkout
 
-# Block training-only crawlers
+# Block training-only crawlers (not search crawlers)
 User-agent: CCBot
 Disallow: /
 

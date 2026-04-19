@@ -1,21 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+          http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Homepage — primary indexed page -->
   <url>
     <loc>https://www.moonnaturallyyours.com/</loc>
     <lastmod>2026-04-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!--
+    Product URLs — currently noindex (placeholder images/content).
+    Remove the noindex meta tag in App.tsx and update lastmod dates
+    once real product images and descriptions are live.
+  -->
   <url>
-    <loc>https://www.moonnaturallyyours.com/cart</loc>
+    <loc>https://www.moonnaturallyyours.com/products/shilajit</loc>
     <lastmod>2026-04-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.9</priority>
   </url>
+
   <url>
-    <loc>https://www.moonnaturallyyours.com/checkout</loc>
+    <loc>https://www.moonnaturallyyours.com/products/kashmiri-saffron</loc>
     <lastmod>2026-04-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.9</priority>
   </url>
+
+  <url>
+    <loc>https://www.moonnaturallyyours.com/products/kashmiri-honey</loc>
+    <lastmod>2026-04-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.moonnaturallyyours.com/products/irani-saffron</loc>
+    <lastmod>2026-04-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.moonnaturallyyours.com/products/kashmiri-almonds</loc>
+    <lastmod>2026-04-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.moonnaturallyyours.com/products/kashmiri-walnuts</loc>
+    <lastmod>2026-04-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.moonnaturallyyours.com/products/kashmiri-ghee</loc>
+    <lastmod>2026-04-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- /cart and /checkout intentionally excluded — noindex transactional pages -->
+
 </urlset>

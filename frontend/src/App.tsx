@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SEOHead } from './components/SEOHead';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { clearAdminSession, createAdminSession, saveAdminSession } from './admin/adminAuth';
 import { CartDrawer } from './components/CartDrawer';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { Footer } from './components/Footer';
@@ -11,7 +11,7 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { HomePage } from './pages/HomePage';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { api, useAddCartItemMutation, useClearCartMutation, useGetCartQuery, useGetMeQuery, useGetProductsQuery, useLoginMutation, useRemoveCartItemMutation } from './store/services/api';
+import { useAddCartItemMutation, useClearCartMutation, useGetCartQuery, useGetProductsQuery, useRemoveCartItemMutation } from './store/services/api';
 import { getGuestCartSessionId } from './store/services/cartSession';
 import { addItem, clearCart, removeItem, setItems } from './store/slices/cartSlice';
 import type { BackendCartItem, BackendProduct } from './store/services/api';
@@ -20,10 +20,62 @@ import type { CatalogItem, ProductKey } from './types';
 const productKeyBySlug: Record<string, ProductKey> = {
   shilajit: 'shilajit',
   'kashmiri-saffron': 'kashmiriSaffron',
+  'kashmiri-honey': 'kashmiriHoney',
   'irani-saffron': 'iraniSaffron',
   'kashmiri-almonds': 'kashmiriAlmonds',
   walnuts: 'walnuts',
+  'kashmiri-walnuts': 'walnuts',
   'kashmiri-ghee': 'kashmiriGhee'
+};
+
+/** Reverse map — productKey → URL slug */
+const slugByProductKey: Partial<Record<ProductKey, string>> = {
+  shilajit: 'shilajit',
+  kashmiriSaffron: 'kashmiri-saffron',
+  kashmiriHoney: 'kashmiri-honey',
+  iraniSaffron: 'irani-saffron',
+  kashmiriAlmonds: 'kashmiri-almonds',
+  walnuts: 'kashmiri-walnuts',
+  kashmiriGhee: 'kashmiri-ghee',
+};
+
+/** SEO metadata for each product route (used when real assets aren't ready) */
+const productSEOMeta: Partial<Record<ProductKey, { title: string; description: string }>> = {
+  shilajit: {
+    title: 'Himalayan Shilajit Gold Grade | MOON Naturally Yours',
+    description:
+      'Gold grade Himalayan Shilajit resin sourced above 16,000 ft. Rich in fulvic acid and 84 trace minerals. Third-party tested. Ships across India.',
+  },
+  kashmiriSaffron: {
+    title: 'Kashmiri Saffron Mongra A++ Grade | MOON Naturally Yours',
+    description:
+      'Genuine Mongra A++ Kashmiri saffron hand-sorted from Pampore — India\'s only GI-tagged saffron region. Deep red stigmas, no yellow style attached.',
+  },
+  kashmiriHoney: {
+    title: 'Kashmiri Honey Wild Mountain Raw | MOON Naturally Yours',
+    description:
+      'Unfiltered raw honey harvested from high-altitude Kashmir meadows. Wild-sourced, enzyme-rich, free from heating or additives. Ships across India.',
+  },
+  iraniSaffron: {
+    title: 'Irani Saffron Negin Grade | MOON Naturally Yours',
+    description:
+      'Negin grade Iranian saffron — whole long threads with strong colour release and balanced flavour. Ideal for everyday cooking, teas and desserts.',
+  },
+  kashmiriAlmonds: {
+    title: 'Kashmiri Almonds Premium Whole Kernels | MOON Naturally Yours',
+    description:
+      'Premium whole almond kernels from Kashmir valley orchards. Unroasted, unsalted, rich in vitamin E and healthy fats. Ships across India.',
+  },
+  walnuts: {
+    title: 'Kashmiri Walnuts Orchard Select | MOON Naturally Yours',
+    description:
+      'Fresh-crop Kashmir walnuts — half and whole kernels. Naturally high in omega-3 fatty acids for heart and brain health. Ships across India.',
+  },
+  kashmiriGhee: {
+    title: 'Kashmiri Ghee Bilona Process | MOON Naturally Yours',
+    description:
+      'Small-batch bilona-process clarified butter. Traditional Kashmiri preparation with a deep aromatic finish. Ideal for Ayurvedic cooking.',
+  },
 };
 
 const productKeyByName: Record<string, ProductKey> = {
@@ -98,7 +150,6 @@ function AppShell() {
   const guestSessionId = useMemo(() => getGuestCartSessionId(), []);
 
   const [activeProduct, setActiveProduct] = useState<ProductKey>('shilajit');
-  const [adminSession, setAdminSession] = useState<{ token: string; email: string } | null>(() => null);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CatalogItem | null>(null);
 
@@ -107,12 +158,6 @@ function AppShell() {
   const [addCartItemMutation] = useAddCartItemMutation();
   const [removeCartItemMutation] = useRemoveCartItemMutation();
   const [clearCartMutation] = useClearCartMutation();
-  const [loginMutation, { isLoading: isAdminLoginLoading }] = useLoginMutation();
-
-  const { error: profileError } = useGetMeQuery(undefined, {
-    skip: !adminSession?.token
-  });
-
   const catalogItems = useMemo(() => {
     if (!backendProducts || backendProducts.length === 0) {
       return staticCatalogItems;
@@ -168,18 +213,6 @@ function AppShell() {
       dispatch(setItems(mapBackendCartItems(backendCartItems, catalogItems)));
     }
   }, [backendCartItems, catalogItems, dispatch, isCartLoaded]);
-
-  useEffect(() => {
-    if (!adminSession || !profileError) return;
-
-    clearAdminSession();
-    setAdminSession(null);
-    dispatch(api.util.resetApiState());
-
-    if (location.pathname.startsWith('/admin')) {
-      navigate('/admin/login', { replace: true });
-    }
-  }, [adminSession, dispatch, location.pathname, navigate, profileError]);
 
   useEffect(() => {
     if (resolvedProductKey !== activeProduct) {
@@ -260,10 +293,6 @@ function AppShell() {
     navigate('/#shop');
   };
 
-  const openAdminLogin = () => {
-    navigate('/admin/login');
-  };
-
   const handleAddCatalogItem = async (item: { id: string; title: string; price: number }) => {
     const image = catalogItems.find((ci) => ci.id === item.id)?.image;
     let syncedWithServer = false;
@@ -291,7 +320,29 @@ function AppShell() {
   const handleProductClick = (item: CatalogItem) => {
     setSelectedProduct(item);
     setIsCartDrawerOpen(false);
+    // Push the product URL so sharing / back-button works correctly
+    if (item.productKey) {
+      const slug = slugByProductKey[item.productKey];
+      if (slug && location.pathname !== `/products/${slug}`) {
+        navigate(`/products/${slug}`, { state: { fromShop: true } });
+      }
+    }
   };
+
+  // Auto-open correct modal when landing directly on a /products/:slug URL
+  useEffect(() => {
+    const match = location.pathname.match(/^\/products\/(.+)$/);
+    if (!match) return;
+    const slug = match[1];
+    const productKey = productKeyBySlug[slug];
+    if (!productKey) return;
+    const item = catalogItems.find((ci) => ci.productKey === productKey);
+    if (item && (!selectedProduct || selectedProduct.productKey !== productKey)) {
+      setSelectedProduct(item);
+      setIsCartDrawerOpen(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, catalogItems]);
 
   const handleAddCurrentStory = async () => {
     const storyItem = catalogByProductKey[resolvedProductKey];
@@ -321,33 +372,47 @@ function AppShell() {
     trackEvent('remove_from_cart', { product_name: removed.title, value: removed.price });
   };
 
-  const handleAdminLogin = async (email: string, password: string) => {
-    try {
-      const payload = await loginMutation({ email, password }).unwrap();
-
-      if (payload.user.role !== 'admin') {
-        return { ok: false, message: 'This account is not allowed to access admin dashboards.' };
-      }
-
-      const session = createAdminSession(payload);
-      saveAdminSession(session);
-      setAdminSession(session);
-
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, message: extractApiErrorMessage(error) };
-    }
-  };
-
-  const handleAdminLogout = () => {
-    clearAdminSession();
-    setAdminSession(null);
-    dispatch(api.util.resetApiState());
-    navigate('/admin/login', { replace: true });
-  };
+  // Determine SEO metadata for the current route
+  const productRouteMatch = location.pathname.match(/^\/products\/(.+)$/);
+  const productRouteKey = productRouteMatch
+    ? productKeyBySlug[productRouteMatch[1]]
+    : null;
 
   return (
     <>
+      {/* ── Per-route SEO head tags ─────────────────────────────────── */}
+      {!productRouteKey && !isAdminRoute && location.pathname === '/' && (
+        <SEOHead
+          title="MOON Naturally Yours | Kashmiri Saffron, Shilajit & Wellness Products India"
+          description="Premium single-origin Kashmiri saffron, Himalayan shilajit, raw mountain honey, almonds, walnuts and bilona ghee. Sourced with care, delivered across India."
+          canonicalUrl="https://www.moonnaturallyyours.com/"
+        />
+      )}
+      {productRouteKey && (
+        <SEOHead
+          title={productSEOMeta[productRouteKey]?.title}
+          description={productSEOMeta[productRouteKey]?.description}
+          canonicalUrl={`https://www.moonnaturallyyours.com/products/${productRouteMatch![1]}`}
+          noIndex={true}
+        />
+      )}
+      {location.pathname === '/cart' && (
+        <SEOHead
+          title="Your Cart | MOON Naturally Yours"
+          description="Review your cart items before checkout."
+          canonicalUrl="https://www.moonnaturallyyours.com/cart"
+          noIndex={true}
+        />
+      )}
+      {location.pathname === '/checkout' && (
+        <SEOHead
+          title="Checkout | MOON Naturally Yours"
+          description="Complete your order — shipping and payment."
+          canonicalUrl="https://www.moonnaturallyyours.com/checkout"
+          noIndex={true}
+        />
+      )}
+
       <a className="skip-link" href="#main-content">Skip to content</a>
 
       {!isAdminRoute ? (
@@ -355,7 +420,7 @@ function AppShell() {
           cartCount={cartCount}
           onCartClick={openCartDrawer}
           onSearchClick={openShopSection}
-          onAccountClick={openAdminLogin}
+          onAccountClick={() => {}}
           heroTheme="light"
         />
       ) : null}
@@ -421,6 +486,20 @@ function AppShell() {
             />
           }
         />
+        {/* Product URL routes — open the modal on the homepage, noindex for now */}
+        <Route
+          path="/products/:slug"
+          element={
+            <HomePage
+              catalogItems={catalogItems}
+              onSelectProduct={setActiveProduct}
+              onAddDetailToCart={handleAddCurrentStory}
+              onAddCatalogToCart={handleAddCatalogItem}
+              onBrowseCollection={openShopSection}
+              onProductClick={handleProductClick}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
@@ -450,9 +529,20 @@ function AppShell() {
       {!isAdminRoute && selectedProduct && (
         <ProductDetailModal
           item={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          onClose={() => {
+            setSelectedProduct(null);
+            // Navigate back to homepage when modal is closed from a product URL
+            if (location.pathname.startsWith('/products/')) {
+              const fromShop = (location.state as { fromShop?: boolean } | null)?.fromShop;
+              navigate(fromShop ? '/#shop' : '/', { replace: true });
+            }
+          }}
           onAddToCart={async (item) => {
             setSelectedProduct(null);
+            if (location.pathname.startsWith('/products/')) {
+              const fromShop = (location.state as { fromShop?: boolean } | null)?.fromShop;
+              navigate(fromShop ? '/#shop' : '/', { replace: true });
+            }
             await handleAddCatalogItem(item);
           }}
         />
