@@ -102,11 +102,10 @@ export function HomePage({
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [editorialSlide, setEditorialSlide] = useState(0);
   const [editorialFading, setEditorialFading] = useState(false);
-  // 0 = video only | 1 = CTA buttons visible | 2 = full details visible
+  // 0 = video | 2 = full details (desktop only)
   const [heroPhase, setHeroPhase] = useState<0 | 1 | 2>(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [mobileCtaVisible, setMobileCtaVisible] = useState(false);
   const touchStartX = useRef<number>(0);
   const advanceRef = useRef<() => void>(() => {});
 
@@ -154,18 +153,9 @@ export function HomePage({
   // Keep advanceRef current so phase timers can call it without stale closure
   useEffect(() => { advanceRef.current = advance; }, [advance]);
 
-  // Mobile: when video ends, show CTAs and start 8s idle timer
   const handleVideoEnded = useCallback(() => {
-    if (isDesktop) return;
-    setHeroPhase(1);
-    setMobileCtaVisible(true);
+    if (!isDesktop) advanceRef.current();
   }, [isDesktop]);
-
-  useEffect(() => {
-    if (heroPhase !== 1 || isDesktop) return;
-    const t = setTimeout(() => advanceRef.current(), 8000);
-    return () => clearTimeout(t);
-  }, [heroPhase, isDesktop]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -186,10 +176,6 @@ export function HomePage({
     // Mobile: video plays → video onEnded → phase 1 → 8s timer (handled separately)
     setHeroPhase(0);
   }, [slideIndex, isDesktop]);
-
-  useEffect(() => {
-    setMobileCtaVisible(false);
-  }, [slideIndex]);
 
   /* ── Editorial slideshow: cross-fade between slides ── */
   useEffect(() => {
@@ -402,7 +388,7 @@ export function HomePage({
             <div style={{ display: 'flex', gap: 12 }}>
               <button
                 type="button"
-                onClick={() => { setMobileCtaVisible(false); onBrowseCollection(); }}
+                onClick={() => onBrowseCollection()}
                 style={{
                   background: 'rgba(11,8,6,0.65)',
                   backdropFilter: 'blur(10px)',
