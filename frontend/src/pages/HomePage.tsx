@@ -3,17 +3,13 @@ import { HeroProductMedia } from '../components/HeroProductMedia';
 import { productStories } from '../data/products';
 import type { CatalogItem, ProductKey } from '../types';
 
-// 6 hero positions: each animation has a "video+CTA" slide then a "details" slide
 type SlidePos = { productKey: ProductKey; isDetails: boolean };
 const SLIDE_CONFIG: SlidePos[] = [
   { productKey: 'shilajit',        isDetails: false },
-  { productKey: 'shilajit',        isDetails: true  },
   { productKey: 'kashmiriSaffron', isDetails: false },
-  { productKey: 'kashmiriSaffron', isDetails: true  },
   { productKey: 'kashmiriHoney',   isDetails: false },
-  { productKey: 'kashmiriHoney',   isDetails: true  },
 ];
-const TOTAL_SLIDES = SLIDE_CONFIG.length;
+const TOTAL_SLIDES = SLIDE_CONFIG.length; // 3
 
 interface CarouselTheme {
   primary: string;
@@ -110,12 +106,11 @@ export function HomePage({
   const [heroPhase, setHeroPhase] = useState<0 | 1 | 2>(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [mobileCtaVisible, setMobileCtaVisible] = useState(false);
   const touchStartX = useRef<number>(0);
   const advanceRef = useRef<() => void>(() => {});
 
   const activeKey = SLIDE_CONFIG[slideIndex].productKey;
-  const isDetailSlide = SLIDE_CONFIG[slideIndex].isDetails;
   const theme = THEMES[activeKey];
   const activeStory = productStories[activeKey];
 
@@ -153,16 +148,24 @@ export function HomePage({
   }, [slideIndex, onSelectProduct]);
 
   const advance = useCallback(() => {
-    if (isDesktop) {
-      const nextProduct = (Math.floor(slideIndex / 2) + 1) % (TOTAL_SLIDES / 2);
-      goToSlide(nextProduct * 2);
-    } else {
-      goToSlide((slideIndex + 1) % TOTAL_SLIDES);
-    }
-  }, [slideIndex, goToSlide, isDesktop]);
+    goToSlide((slideIndex + 1) % TOTAL_SLIDES);
+  }, [slideIndex, goToSlide]);
 
   // Keep advanceRef current so phase timers can call it without stale closure
   useEffect(() => { advanceRef.current = advance; }, [advance]);
+
+  // Mobile: when video ends, show CTAs and start 8s idle timer
+  const handleVideoEnded = useCallback(() => {
+    if (isDesktop) return;
+    setHeroPhase(1);
+    setMobileCtaVisible(true);
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (heroPhase !== 1 || isDesktop) return;
+    const t = setTimeout(() => advanceRef.current(), 8000);
+    return () => clearTimeout(t);
+  }, [heroPhase, isDesktop]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -172,30 +175,21 @@ export function HomePage({
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // Phase cascade — driven by slide type, no intermediate resets
+  // Phase cascade
   useEffect(() => {
     if (isDesktop) {
-      if (isDetailSlide) {
-        // Desktop: skip detail slides instantly
-        const t = setTimeout(() => advanceRef.current(), 0);
-        return () => clearTimeout(t);
-      }
       // Desktop: always show content, auto-advance after 9.5s
       setHeroPhase(2);
       const t = setTimeout(() => advanceRef.current(), 9500);
       return () => clearTimeout(t);
     }
-    if (isDetailSlide) {
-      setHeroPhase(2);
-      const t = setTimeout(() => advanceRef.current(), 6000);
-      return () => clearTimeout(t);
-    } else {
-      setHeroPhase(0);
-      const t1 = setTimeout(() => setHeroPhase(1), 4500);
-      const t2 = setTimeout(() => advanceRef.current(), 9500);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    }
-  }, [slideIndex, isDetailSlide, isDesktop]);
+    // Mobile: video plays → video onEnded → phase 1 → 8s timer (handled separately)
+    setHeroPhase(0);
+  }, [slideIndex, isDesktop]);
+
+  useEffect(() => {
+    setMobileCtaVisible(false);
+  }, [slideIndex]);
 
   /* ── Editorial slideshow: cross-fade between slides ── */
   useEffect(() => {
@@ -280,63 +274,172 @@ export function HomePage({
             activeProduct={activeKey}
             activeStory={activeStory}
             glow={theme.glow}
+            onVideoEnded={handleVideoEnded}
           />
         </div>
 
-        {/* ── HERO CTA OVERLAY — phase 1 only ── */}
-        <div style={{
-          position: 'absolute',
-          bottom: '14%',
-          left: 0,
-          right: 0,
-          display: 'flex',
-          gap: 16,
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 30,
-          opacity: (!isDesktop && heroPhase === 1) ? 1 : 0,
-          transform: (!isDesktop && heroPhase === 1) ? 'translateY(0)' : 'translateY(14px)',
-          transition: 'opacity 0.5s ease, transform 0.5s ease',
-          pointerEvents: (!isDesktop && heroPhase === 1) ? 'auto' : 'none',
-        }}>
-          <button
-            type="button"
-            onClick={() => { setHeroPhase(0); onBrowseCollection(); }}
+        {/* ── MOBILE TEXT OVERLAY — portrait/mobile only ── */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{ zIndex: 15, pointerEvents: 'none' }}
+        >
+          {/* Left-side gradient scrim for text readability */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(to right, rgba(${theme.glow},0.72) 0%, rgba(${theme.glow},0.25) 55%, transparent 100%)`,
+            pointerEvents: 'none',
+          }} />
+          {/* Bottom gradient for CTAs */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%',
+            background: `linear-gradient(to top, rgba(${theme.glow},0.80) 0%, transparent 100%)`,
+            pointerEvents: 'none',
+          }} />
+
+          {/* TOP-LEFT: eyebrow + product name + tagline */}
+          <div
+            key={`mob-left-${animKey}`}
             style={{
-              background: 'rgba(11,8,6,0.60)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.65)',
-              color: '#fff',
-              padding: '13px 32px',
+              position: 'absolute',
+              top: '18%',
+              left: '6%',
+              right: '45%',
+            }}
+          >
+            <p style={{
               fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
-              fontSize: '0.625rem',
-              letterSpacing: '0.22em',
+              fontSize: '9px',
+              letterSpacing: '0.38em',
               textTransform: 'uppercase',
               fontWeight: 700,
-              cursor: 'pointer',
-              borderRadius: 2,
-            }}
-          >Shop Now</button>
-          <button
-            type="button"
-            onClick={() => setHeroPhase(2)}
-            style={{
-              background: 'transparent',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.45)',
-              color: 'rgba(255,255,255,0.9)',
-              padding: '13px 32px',
-              fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
-              fontSize: '0.625rem',
-              letterSpacing: '0.22em',
+              color: 'rgba(250,246,239,0.72)',
+              marginBottom: 10,
+            }}>
+              {String(slideIndex + 1).padStart(2, '0')}&thinsp;/&thinsp;03&nbsp;·&nbsp;Origin
+            </p>
+            <h1 style={{
+              fontFamily: 'var(--font-display, Syncopate, sans-serif)',
+              fontSize: 'clamp(1.75rem, 9vw, 2.8rem)',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
               textTransform: 'uppercase',
-              fontWeight: 700,
-              cursor: 'pointer',
-              borderRadius: 2,
+              lineHeight: 0.92,
+              color: '#FFFFFF',
+              margin: 0,
+            }}>
+              {activeStory.featureName}
+            </h1>
+            <p style={{
+              fontFamily: 'var(--font-serif, Fraunces, serif)',
+              fontStyle: 'italic',
+              fontSize: '0.9rem',
+              color: theme.accent === '#7C4A2A' ? '#C8965A' : theme.accent,
+              marginTop: 8,
+            }}>
+              {activeStory.title}
+            </p>
+          </div>
+
+          {/* RIGHT-SIDE: description + feature bullets */}
+          <div
+            key={`mob-right-${animKey}`}
+            style={{
+              position: 'absolute',
+              top: '38%',
+              right: '4%',
+              left: '52%',
             }}
-          >Explore</button>
+          >
+            <p style={{
+              fontSize: '0.7rem',
+              lineHeight: 1.55,
+              color: 'rgba(250,246,239,0.82)',
+              fontFamily: 'var(--font-sans)',
+              marginBottom: 12,
+            }}>
+              {activeStory.desc.slice(0, 120)}…
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {bullets.slice(0, 3).map((b) => (
+                <span key={b} style={{
+                  fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                  fontSize: '8px',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  color: '#FFFFFF',
+                  padding: '4px 8px',
+                  border: `1px solid rgba(250,246,239,0.35)`,
+                  background: `rgba(${theme.glow},0.25)`,
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                }}>{b}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* BOTTOM: price + CTA buttons */}
+          <div style={{
+            position: 'absolute',
+            bottom: '10%',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 10,
+            pointerEvents: 'auto',
+          }}>
+            <p style={{
+              fontFamily: 'var(--font-serif, Fraunces, serif)',
+              fontSize: '1.375rem',
+              fontWeight: 600,
+              color: '#FFFFFF',
+              margin: 0,
+            }}>
+              {activeItem ? fmt(activeItem.price) : activeStory.price}
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => { setMobileCtaVisible(false); onBrowseCollection(); }}
+                style={{
+                  background: 'rgba(11,8,6,0.65)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.65)',
+                  color: '#fff',
+                  padding: '12px 28px',
+                  fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                  fontSize: '0.5625rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  borderRadius: 2,
+                }}
+              >Shop Now</button>
+              <button
+                type="button"
+                onClick={() => onSelectProduct(activeKey)}
+                style={{
+                  background: 'transparent',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.45)',
+                  color: 'rgba(255,255,255,0.9)',
+                  padding: '12px 28px',
+                  fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                  fontSize: '0.5625rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  borderRadius: 2,
+                }}
+              >Explore</button>
+            </div>
+          </div>
         </div>
 
         {/* ── SPLIT LAYOUT ── */}
@@ -361,7 +464,7 @@ export function HomePage({
               className="mb-5 font-display text-[10px] uppercase tracking-[0.44em] carousel-text-enter"
               style={{ color: (isDesktop || heroPhase >= 2) ? theme.accent : 'rgba(255,255,255,0.75)', position: 'relative', zIndex: 1, transition: 'color 0.6s ease' }}
             >
-              {String(Math.floor(slideIndex / 2) + 1).padStart(2, '0')}&thinsp;/&thinsp;03&nbsp;&nbsp;·&nbsp;&nbsp;Himalayan Origin
+              {String(slideIndex + 1).padStart(2, '0')}&thinsp;/&thinsp;03&nbsp;&nbsp;·&nbsp;&nbsp;Himalayan Origin
             </p>
             {/* Content panel — fades in at phase 2 */}
             <div style={{
@@ -476,39 +579,28 @@ export function HomePage({
 
         </div>
 
-        {/* ── CAROUSEL DOTS — 6 positions, grouped in pairs ── */}
+        {/* ── CAROUSEL DOTS — 3 slides ── */}
         <div
           className="absolute bottom-10 left-8 flex items-center gap-1 md:left-14 lg:left-20 xl:left-24"
           style={{ zIndex: 30 }}
         >
           {SLIDE_CONFIG.map((pos, i) => {
-            if (isDesktop && i % 2 !== 0) return null; // skip detail-slide dots on desktop
-            const isActive = isDesktop
-              ? Math.floor(i / 2) === Math.floor(slideIndex / 2)
-              : i === slideIndex;
-            const isInGroup = Math.floor(i / 2) === Math.floor(slideIndex / 2);
+            const isActive = i === slideIndex;
             return (
-              <>
-                {i % 2 === 0 && i > 0 && (
-                  <span key={`gap-${i}`} style={{ width: 8 }} />
-                )}
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`${productStories[pos.productKey].featureName} ${pos.isDetails ? 'details' : 'video'}`}
-                  onClick={() => goToSlide(i)}
-                  className="h-1.5 transition-all duration-500 hover:opacity-80"
-                  style={{
-                    width: isActive ? '22px' : '6px',
-                    borderRadius: '3px',
-                    background: isActive
-                      ? theme.primary
-                      : isInGroup
-                        ? `rgba(${theme.glow},0.45)`
-                        : `rgba(${theme.glow},0.20)`,
-                  }}
-                />
-              </>
+              <button
+                key={i}
+                type="button"
+                aria-label={`${productStories[pos.productKey].featureName} video`}
+                onClick={() => goToSlide(i)}
+                className="h-1.5 transition-all duration-500 hover:opacity-80"
+                style={{
+                  width: isActive ? '22px' : '6px',
+                  borderRadius: '3px',
+                  background: isActive
+                    ? theme.primary
+                    : `rgba(${theme.glow},0.20)`,
+                }}
+              />
             );
           })}
         </div>

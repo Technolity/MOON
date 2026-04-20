@@ -8,6 +8,7 @@ interface HeroProductMediaProps {
   activeStory: ProductStory;
   activeItem?: CatalogItem;
   glow: string;
+  onVideoEnded?: () => void;
 }
 
 interface HeroMediaAsset {
@@ -58,7 +59,7 @@ const HERO_MEDIA: Record<ProductKey, HeroMediaAsset> = {
 
 const DESKTOP_MQ = '(min-width: 768px)';
 
-export function HeroProductMedia({ activeProduct, activeStory, activeItem, glow }: HeroProductMediaProps) {
+export function HeroProductMedia({ activeProduct, activeStory, activeItem, glow, onVideoEnded }: HeroProductMediaProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [mobileVideoReady, setMobileVideoReady] = useState(false);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
@@ -132,11 +133,11 @@ export function HeroProductMedia({ activeProduct, activeStory, activeItem, glow 
             aria-label={`${activeStory.featureName} product animation`}
             className="hero-product-enter hero-media-video absolute inset-0 h-full w-full object-cover"
             disablePictureInPicture
-            loop
             muted
             playsInline
             poster={poster}
             preload="none"
+            onEnded={onVideoEnded}
             style={{ opacity: mobileVideoReady ? 1 : 0, transition: 'opacity 0.6s ease' }}
           >
             {mobileVideoReady && <source src={media.webm} type="video/webm" />}
