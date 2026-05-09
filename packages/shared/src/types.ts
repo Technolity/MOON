@@ -35,6 +35,7 @@ export interface CatalogItem {
   subtitle: string;
   price: number;
   image: string;
+  images?: string[];
   alt: string;
   featured?: boolean;
   productKey?: ProductKey;

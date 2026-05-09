@@ -48,6 +48,10 @@ function exportInventoryCsv(rows: InventoryRow[]) {
 export function InventoryPage() {
   const [filter, setFilter] = useState<'all' | 'critical'>('all');
   const [rowError, setRowError] = useState('');
+  const [pendingQty, setPendingQty] = useState<Map<string, number>>(new Map());
+
+  const getPending = (id: string, stock: number) =>
+    pendingQty.has(id) ? pendingQty.get(id)! : stock;
 
   const { data: inventory, isLoading, isError, refetch } = useGetInventoryQuery();
   const [updateInventory, { isLoading: isUpdating }] = useUpdateInventoryMutation();
@@ -173,7 +177,7 @@ export function InventoryPage() {
               <Pill tone="neutral">{row.subtitle}</Pill>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
-                  onClick={() => updateStock(row, row.stock - 1)}
+                  onClick={() => setPendingQty(m => { const n = new Map(m); n.set(row.id, Math.max(0, getPending(row.id, row.stock) - 1)); return n; })}
                   disabled={isUpdating}
                   style={{
                     width: 26, height: 26, borderRadius: 6,
@@ -183,14 +187,21 @@ export function InventoryPage() {
                     fontSize: 14, fontWeight: 500,
                   }}
                 >−</button>
-                <span className="mono" style={{
-                  fontSize: 13, minWidth: 32, textAlign: 'center',
-                  color: row.stock === 0 ? 'var(--terracotta)' : row.stock <= 10 ? 'var(--gold)' : 'var(--ink)',
-                }}>
-                  {row.stock}
-                </span>
+                <input
+                  type="number"
+                  min="0"
+                  value={getPending(row.id, row.stock)}
+                  onChange={e => setPendingQty(m => { const n = new Map(m); n.set(row.id, Math.max(0, Number(e.target.value))); return n; })}
+                  style={{
+                    width: 52, textAlign: 'center',
+                    border: '1px solid var(--line)', borderRadius: 6,
+                    background: 'var(--bg-elev)', padding: '2px 4px',
+                    fontSize: 13, fontFamily: 'var(--font-mono)',
+                    color: row.stock === 0 ? 'var(--terracotta)' : row.stock <= 10 ? 'var(--gold)' : 'var(--ink)',
+                  }}
+                />
                 <button
-                  onClick={() => updateStock(row, row.stock + 1)}
+                  onClick={() => setPendingQty(m => { const n = new Map(m); n.set(row.id, getPending(row.id, row.stock) + 1); return n; })}
                   disabled={isUpdating}
                   style={{
                     width: 26, height: 26, borderRadius: 6,
@@ -200,6 +211,20 @@ export function InventoryPage() {
                     fontSize: 14, fontWeight: 500,
                   }}
                 >+</button>
+                {pendingQty.has(row.id) && (
+                  <button
+                    onClick={() => {
+                      updateStock(row, pendingQty.get(row.id)!);
+                      setPendingQty(m => { const n = new Map(m); n.delete(row.id); return n; });
+                    }}
+                    disabled={isUpdating}
+                    style={{
+                      marginLeft: 6, padding: '3px 10px', fontSize: 12, borderRadius: 6,
+                      border: '1px solid var(--sage)', background: 'var(--sage-soft)',
+                      color: 'var(--sage)', cursor: 'pointer', fontWeight: 500,
+                    }}
+                  >Save</button>
+                )}
               </div>
               <Pill tone={row.status === 'In Stock' ? 'sage' : row.status === 'Low Stock' ? 'gold' : 'terracotta'}>
                 {row.status}

@@ -1145,3 +1145,107 @@ input {
         width: 100%;
     }
 }
+
+/* ── Checkout Modal ─────────────────────────────────────────────────────────── */
+.co-content {
+    max-width: 460px;
+}
+
+.co-summary {
+    padding: 0 20px 8px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.co-total-row {
+    border-top: 1px solid rgba(0, 0, 0, 0.10);
+}
+
+.co-form {
+    padding: 16px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.co-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.co-field label {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #5f5447;
+}
+
+.co-input {
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    background: #fffdfa;
+    padding: 0 12px;
+    font-size: 0.93rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.18s;
+}
+
+.co-input:focus {
+    border-color: #19130d;
+}
+
+.co-error {
+    font-size: 0.82rem;
+    color: #a13030;
+    margin: 0;
+}
+
+.co-pay-btn {
+    margin-top: 4px;
+}
+
+.co-success {
+    padding: 40px 24px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.co-success.hidden {
+    display: none;
+}
+
+.co-success-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #2e6b42;
+    color: #fff;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.co-success-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0;
+}
+
+.co-success-sub {
+    color: #5f5447;
+    font-size: 0.88rem;
+    margin: 0;
+    line-height: 1.5;
+}

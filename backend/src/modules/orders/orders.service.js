@@ -2,6 +2,7 @@ const ApiError = require('../../core/errors/api-error');
 const { findProductsByIds } = require('../products/products.repository');
 const { calculateShipping } = require('../shipping/shipping.service');
 const ordersRepository = require('./orders.repository');
+const { sendOrderConfirmation, sendAdminOrderAlert } = require('../notifications/notifications.service');
 
 function generateOrderNumber() {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -79,6 +80,12 @@ async function createOrder({ user, input }) {
 
   // 6. Reserve inventory (best-effort)
   await ordersRepository.reserveInventory(lineItems);
+
+  // 7. Fire-and-forget emails — never block order creation on email delivery
+  Promise.allSettled([
+    sendAdminOrderAlert({ order, items: lineItems, customerEmail, customerPhone, shippingAddress, total }),
+    sendOrderConfirmation({ to: customerEmail, orderNumber: order.order_number, total, items: lineItems })
+  ]).catch(() => {});
 
   return { ...order, items: lineItems, shippingCost, subtotal, total };
 }

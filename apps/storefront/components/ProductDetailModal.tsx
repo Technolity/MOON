@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import type { CatalogItem, ProductKey } from '@/lib/types';
 import { productStories } from '@/lib/data/product-statics';
+import { productGalleryImages, stockImageForProduct } from '@/lib/products/images';
 
 interface Review {
   name: string;
@@ -50,58 +51,6 @@ const STATIC_REVIEWS: Record<ProductKey, Review[]> = {
   ],
 };
 
-const GALLERY_IMAGES: Record<ProductKey, string[]> = {
-  shilajit: [
-    '/moon333/ezgif-frame-125.png',
-    '/moon333/ezgif-frame-096.png',
-    '/moon333/ezgif-frame-030.png',
-    '/moon333/ezgif-frame-060.png',
-    '/moon333/ezgif-frame-051.png',
-  ],
-  kashmiriSaffron: [
-    '/moon2222/ezgif-frame-120.png',
-    '/moon2222/ezgif-frame-096.png',
-    '/moon2222/ezgif-frame-030.png',
-    '/moon2222/ezgif-frame-060.png',
-    '/moon2222/ezgif-frame-056.png',
-  ],
-  kashmiriHoney: [
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-096.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-030.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-060.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.png',
-  ],
-  iraniSaffron: [
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-096.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-030.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-060.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.png',
-  ],
-  kashmiriAlmonds: [
-    '/moon2222/ezgif-frame-056.png',
-    '/moon2222/ezgif-frame-096.png',
-    '/moon2222/ezgif-frame-030.png',
-    '/moon2222/ezgif-frame-060.png',
-    '/moon2222/ezgif-frame-120.png',
-  ],
-  walnuts: [
-    '/moon333/ezgif-frame-051.png',
-    '/moon333/ezgif-frame-096.png',
-    '/moon333/ezgif-frame-030.png',
-    '/moon333/ezgif-frame-060.png',
-    '/moon333/ezgif-frame-125.png',
-  ],
-  kashmiriGhee: [
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-096.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-030.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-060.png',
-    '/ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.png',
-  ],
-};
-
 interface ProductDetailModalProps {
   item: CatalogItem;
   onClose: () => void;
@@ -110,7 +59,13 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ item, onClose, onAddToCart }: ProductDetailModalProps) {
   const story = item.productKey ? productStories[item.productKey] : null;
-  const images = item.productKey ? GALLERY_IMAGES[item.productKey] : [item.image];
+  const images = productGalleryImages({
+    primary: item.image,
+    images: item.images,
+    key: item.productKey,
+    theme: story?.theme,
+  });
+  const imageFallback = stockImageForProduct(item.productKey, story?.theme);
   const staticReviews = item.productKey ? STATIC_REVIEWS[item.productKey] : [];
 
   const [activeImage, setActiveImage] = useState(0);
@@ -236,6 +191,11 @@ export function ProductDetailModal({ item, onClose, onAddToCart }: ProductDetail
               <img
                 src={images[activeImage]}
                 alt={`${item.title} — view ${activeImage + 1}`}
+                onError={(e) => {
+                  if (e.currentTarget.dataset.fallbackApplied === 'true') return;
+                  e.currentTarget.dataset.fallbackApplied = 'true';
+                  e.currentTarget.src = imageFallback;
+                }}
                 style={{
                   width: '100%', height: '100%', objectFit: 'cover',
                   display: 'block',
@@ -266,6 +226,11 @@ export function ProductDetailModal({ item, onClose, onAddToCart }: ProductDetail
                   <img
                     src={img}
                     alt={`${item.title} thumbnail ${i + 1}`}
+                    onError={(e) => {
+                      if (e.currentTarget.dataset.fallbackApplied === 'true') return;
+                      e.currentTarget.dataset.fallbackApplied = 'true';
+                      e.currentTarget.src = imageFallback;
+                    }}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
                 </button>

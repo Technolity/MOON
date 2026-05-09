@@ -7,14 +7,14 @@ const paymentsController = require('./payments.controller');
 const {
   createRazorpayOrderSchema,
   paymentStatusParamsSchema,
-  verifyPaymentSchema
+  verifyPaymentSchema,
+  quickOrderSchema,
+  quickVerifySchema
 } = require('./payments.validator');
 
 const router = express.Router();
 
-// All payment operations require authentication
-router.use(requireAuth);
-
+// Guest-accessible: create order and verify payment (storefront is unauthenticated)
 router.post(
   '/razorpay',
   paymentsLimiter,
@@ -27,6 +27,24 @@ router.post(
   validateRequest({ body: verifyPaymentSchema }),
   paymentsController.verifyPayment
 );
+
+// Simple checkout — no DB order required (static site / guest checkout)
+router.post(
+  '/quick-order',
+  paymentsLimiter,
+  validateRequest({ body: quickOrderSchema }),
+  paymentsController.quickOrder
+);
+router.post(
+  '/quick-verify',
+  paymentsLimiter,
+  validateRequest({ body: quickVerifySchema }),
+  paymentsController.quickVerify
+);
+
+// Admin / auth-gated routes
+router.use(requireAuth);
+
 router.get(
   '/:orderId',
   validateRequest({ params: paymentStatusParamsSchema }),

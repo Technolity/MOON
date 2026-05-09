@@ -22,6 +22,19 @@ import { Icon } from '@/components/ui/Icon';
 
 type Props = { params: Promise<{ id: string }> };
 
+const MAX_UPLOAD_FILES = 5;
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const MAX_UPLOAD_MB = Math.round(MAX_UPLOAD_BYTES / 1024 / 1024);
+
+function getApiErrorMessage(error: unknown) {
+  const maybeError = error as { data?: { message?: string }; error?: string; message?: string };
+  return maybeError?.data?.message ?? maybeError?.message ?? maybeError?.error ?? null;
+}
+
+function formatBytes(bytes: number) {
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export default function ProductEditPage({ params }: Props) {
   const { id } = use(params);
   const isNew = id === 'new';
@@ -45,6 +58,7 @@ export default function ProductEditPage({ params }: Props) {
   const [metaDescription, setMetaDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [fallbackImages, setFallbackImages] = useState<Array<{ url: string; alt: string; order: number }>>([]);
   const [uploadError, setUploadError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -62,7 +76,11 @@ export default function ProductEditPage({ params }: Props) {
     setMetaTitle(product.meta_title ?? '');
     setMetaDescription(product.meta_description ?? '');
     setIsActive(product.is_active ?? true);
-    setImages([...(product.images ?? [])].sort((a, b) => a.order - b.order));
+    const allImages = [...(product.images ?? [])].sort((a, b) => a.order - b.order);
+    const real = allImages.filter((img: any) => !img.isFallback);
+    const fallback = allImages.filter((img: any) => img.isFallback);
+    setImages(real);
+    setFallbackImages(fallback);
   }, [product, isNew]);
 
   const handleSave = async () => {
@@ -127,16 +145,34 @@ export default function ProductEditPage({ params }: Props) {
       setUploadError('Save the product first, then upload images.');
       return;
     }
+
+    const selectedFiles = Array.from(files);
+    if (selectedFiles.length > MAX_UPLOAD_FILES) {
+      setUploadError(`Upload a maximum of ${MAX_UPLOAD_FILES} images at a time.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const oversized = selectedFiles.filter((file) => file.size > MAX_UPLOAD_BYTES);
+    if (oversized.length > 0) {
+      const names = oversized.map((file) => `${file.name} (${formatBytes(file.size)})`).join(', ');
+      setUploadError(`These images are too large: ${names}. Max ${MAX_UPLOAD_MB} MB each.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setUploadError('');
     const formData = new FormData();
-    Array.from(files).forEach((file) => formData.append('images', file));
+    selectedFiles.forEach((file) => formData.append('images', file));
     try {
       const result = await uploadImages({ productId: id, formData }).unwrap();
       const startOrder = images.length;
       const newImages = result.images.map((img, i) => ({ ...img, order: startOrder + i }));
       setImages((prev) => [...prev, ...newImages]);
-    } catch {
-      setUploadError('Upload failed. Check file size (max 5 MB per image, max 5 images).');
+    } catch (error) {
+      setUploadError(getApiErrorMessage(error) ?? `Upload failed. Check file size (max ${MAX_UPLOAD_MB} MB per image, max ${MAX_UPLOAD_FILES} images).`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -207,7 +243,7 @@ export default function ProductEditPage({ params }: Props) {
             </div>
           </Card>
 
-          <Card title="Media" subtitle={isNew ? 'Save the product first, then upload images.' : 'Product imagery. First image is the hero.'}>
+          <Card title="Media" subtitle={isNew ? 'Save the product first, then upload images.' : images.length > 0 ? 'Product imagery. First image is the hero.' : 'Upload images or use stock previews below.'}>
             <div style={{ marginTop: 16 }}>
               {images.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
@@ -245,9 +281,35 @@ export default function ProductEditPage({ params }: Props) {
               >
                 <Icon name="add_photo_alternate" size={24} />
                 <span style={{ fontSize: 13, fontWeight: 500 }}>{isUploading ? 'Uploading...' : 'Add images'}</span>
+                <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Max {MAX_UPLOAD_FILES} images, {MAX_UPLOAD_MB} MB each</span>
               </button>
               <input aria-label="Upload image" ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
               {uploadError && <div style={{ marginTop: 8, color: 'var(--terracotta)', fontSize: 12 }}>{uploadError}</div>}
+
+              {/* Stock fallback preview — shown only when no real images uploaded */}
+              {images.length === 0 && fallbackImages.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                    <Icon name="photo_library" size={14} />
+                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-2)' }}>Stock photos (shown until you upload)</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
+                    {fallbackImages.map((img, idx) => {
+                      const validSrc = (() => { try { new URL(img.url); return img.url; } catch { return null; } })();
+                      return (
+                        <div key={img.url || idx} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)', opacity: 0.75 }}>
+                          {validSrc ? (
+                            <Image src={validSrc} alt={img.alt || 'Stock'} fill style={{ objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', background: 'var(--bg-sunk)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="broken_image" /></div>
+                          )}
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 8, textAlign: 'center', padding: '2px 0', fontWeight: 600, letterSpacing: '0.05em' }}>STOCK</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 

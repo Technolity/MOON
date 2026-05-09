@@ -113,6 +113,7 @@ export default function ProductsPage() {
               <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--ink-3)' }}>No products found.</td></tr>
             ) : visibleProducts.map((p) => {
               const rawThumb = p.images?.[0]?.url || p.image_url;
+              const isFallback = p.images?.[0]?.isFallback === true;
               const thumb = (() => { try { new URL(rawThumb!); return rawThumb; } catch { return null; } })();
               
               return (
@@ -129,8 +130,11 @@ export default function ProductsPage() {
                 >
                   <td style={{ padding: '14px 22px' }}>
                     {thumb ? (
-                      <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+                      <div style={{ position: 'relative', width: 44, height: 44, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
                         <Image src={thumb} alt={p.name} width={44} height={44} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {isFallback && (
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 7, textAlign: 'center', padding: '1px 0', letterSpacing: '0.05em', fontWeight: 600 }}>STOCK</div>
+                        )}
                       </div>
                     ) : (
                       <Placeholder label="IMG" w={44} h={44} />

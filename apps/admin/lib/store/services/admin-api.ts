@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getAdminToken } from '@/lib/admin/adminAuth';
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { expireAdminSession, getAdminToken } from '@/lib/admin/adminAuth';
 
 interface ApiEnvelope<T> {
   success: boolean;
@@ -15,7 +16,7 @@ export interface BackendProduct {
   price: number;
   discount_price?: number | null;
   image_url?: string | null;
-  images?: Array<{ url: string; alt: string; order: number; blurDataUrl: string | null }>;
+  images?: Array<{ url: string; alt: string; order: number; blurDataUrl: string | null; isFallback?: boolean }>;
   category?: string | null;
   theme?: string | null;
   is_active?: boolean;
@@ -262,23 +263,76 @@ export interface GeoResponse {
   byCity: GeoCityEntry[];
 }
 
+export interface DiscountCode {
+  id: string;
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  minimum_subtotal: number;
+  max_discount: number | null;
+  usage_limit: number | null;
+  usage_count: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiscountWritePayload {
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  minimumSubtotal?: number;
+  maxDiscount?: number | null;
+  usageLimit?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  isActive?: boolean;
+}
+
 const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api').replace(/\/+$/, '');
 
 const unwrap = <T>(response: ApiEnvelope<T>) => response.data;
 
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl,
+  prepareHeaders: (headers) => {
+    const token = getAdminToken();
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+const adminBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions
+) => {
+  const url = typeof args === 'string' ? args : args.url;
+  const isLoginRequest = url === '/auth/login';
+  if (!isLoginRequest && !getAdminToken()) {
+    return {
+      error: {
+        status: 401,
+        data: { success: false, message: 'Admin session required.' },
+      },
+    };
+  }
+
+  const result = await rawBaseQuery(args, api, extraOptions);
+  if (result.error?.status === 401) {
+    expireAdminSession();
+  }
+  return result;
+};
+
 export const adminApi = createApi({
   reducerPath: 'adminApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl,
-    prepareHeaders: (headers) => {
-      const token = getAdminToken();
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['Inventory', 'Analytics', 'AdminSession', 'AdminProducts', 'AdminOrders', 'AdminCustomers', 'AdminCategories', 'DetailedAnalytics'],
+  baseQuery: adminBaseQuery,
+  tagTypes: ['Inventory', 'Analytics', 'AdminSession', 'AdminProducts', 'AdminOrders', 'AdminCustomers', 'AdminCategories', 'AdminDiscounts', 'DetailedAnalytics'],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, { email: string; password: string }>({
       query: (body) => ({
@@ -439,6 +493,41 @@ export const adminApi = createApi({
       providesTags: ['AdminCategories'],
     }),
 
+    /* ─── Admin Discounts ─────────────────────────────────────────── */
+    getAdminDiscounts: builder.query<DiscountCode[], void>({
+      query: () => '/admin/discounts',
+      transformResponse: unwrap,
+      providesTags: ['AdminDiscounts'],
+    }),
+
+    createAdminDiscount: builder.mutation<DiscountCode, DiscountWritePayload>({
+      query: (body) => ({
+        url: '/admin/discounts',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: ['AdminDiscounts'],
+    }),
+
+    updateAdminDiscount: builder.mutation<DiscountCode, { id: string; patch: Partial<DiscountWritePayload> }>({
+      query: ({ id, patch }) => ({
+        url: `/admin/discounts/${id}`,
+        method: 'PUT',
+        body: patch,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: ['AdminDiscounts'],
+    }),
+
+    deleteAdminDiscount: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/discounts/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminDiscounts'],
+    }),
+
     /* ─── Detailed Analytics ──────────────────────────────────────── */
     getBuyersSummary: builder.query<BuyersSummaryResponse, { dateFrom?: string; dateTo?: string; limit?: number; offset?: number } | undefined>({
       query: (params) =>
@@ -499,6 +588,10 @@ export const {
   useGetAdminCustomersQuery,
   useGetAdminCustomerByIdQuery,
   useGetAdminCategoriesQuery,
+  useGetAdminDiscountsQuery,
+  useCreateAdminDiscountMutation,
+  useUpdateAdminDiscountMutation,
+  useDeleteAdminDiscountMutation,
   useGetBuyersSummaryQuery,
   useGetBuyerDetailQuery,
   useGetProductBuyersQuery,

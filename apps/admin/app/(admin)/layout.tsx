@@ -23,7 +23,11 @@ function AdminGuard({ children }: { children: ReactNode }) {
 
   if (!hydrated) return null;
 
-  if (!session) return <>{children}</>;
+  if (!session) {
+    return pathname === '/login' ? <>{children}</> : null;
+  }
+
+  if (pathname === '/login') return null;
 
   return (
     <AdminLayout session={session} onLogout={logout}>

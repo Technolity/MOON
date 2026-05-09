@@ -1,5 +1,6 @@
 const { getSupabaseAdminClient } = require('../../integrations/database/supabase-admin');
 const ApiError = require('../../core/errors/api-error');
+const { enrichWithFallbackImages } = require('./product-fallback-images');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -8,7 +9,7 @@ async function listProducts({ category, theme, limit = 50 } = {}) {
   let query = db
     .from('products')
     .select(
-      'id, name, slug, description, price, discount_price, image_url, category, theme, meta_title, meta_description, inventory(quantity, reserved)'
+      'id, name, slug, description, price, discount_price, image_url, images, category, theme, meta_title, meta_description, inventory(quantity, reserved)'
     )
     .eq('is_active', true)
     .order('name');
@@ -19,13 +20,13 @@ async function listProducts({ category, theme, limit = 50 } = {}) {
 
   const { data, error } = await query;
   if (error) throw new ApiError(500, error.message);
-  
-  return (data ?? []).map(p => {
+
+  return enrichWithFallbackImages((data ?? []).map(p => {
     const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
     const inStock = inv ? (inv.quantity - inv.reserved > 0) : true;
     delete p.inventory;
     return { ...p, inStock };
-  });
+  }));
 }
 
 async function findProductById(id) {
@@ -45,7 +46,7 @@ async function findProductById(id) {
   const inv = Array.isArray(data.inventory) ? data.inventory[0] : data.inventory;
   data.inStock = inv ? (inv.quantity - inv.reserved > 0) : true;
 
-  return data;
+  return enrichWithFallbackImages(data);
 }
 
 async function searchProducts({ q, limit = 20 } = {}) {
@@ -54,19 +55,19 @@ async function searchProducts({ q, limit = 20 } = {}) {
 
   const { data, error } = await db
     .from('products')
-    .select('id, name, slug, description, price, discount_price, image_url, category, theme, inventory(quantity, reserved)')
+    .select('id, name, slug, description, price, discount_price, image_url, images, category, theme, inventory(quantity, reserved)')
     .eq('is_active', true)
     .or(`name.ilike.${term},description.ilike.${term}`)
     .limit(limit);
 
   if (error) throw new ApiError(500, error.message);
-  
-  return (data ?? []).map(p => {
+
+  return enrichWithFallbackImages((data ?? []).map(p => {
     const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
     const inStock = inv ? (inv.quantity - inv.reserved > 0) : true;
     delete p.inventory;
     return { ...p, inStock };
-  });
+  }));
 }
 
 async function findProductsByIds(ids) {
@@ -91,7 +92,7 @@ async function adminListProducts({ limit = 100, offset = 0 } = {}) {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw new ApiError(500, error.message);
-  return data ?? [];
+  return enrichWithFallbackImages(data ?? []);
 }
 
 async function adminCreateProduct(fields) {

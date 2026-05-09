@@ -9,6 +9,7 @@ const env = require('./config/env');
 const errorHandler = require('./core/middleware/error-handler');
 const notFound = require('./core/middleware/not-found');
 const apiLimiter = require('./core/middleware/rate-limit');
+const requestLogger = require('./core/middleware/request-logger');
 const sendResponse = require('./core/utils/send-response');
 const apiRouter = require('./modules');
 
@@ -49,6 +50,7 @@ app.use(
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(requestLogger);
 
 // Body parsers — enforce size limits on both formats
 app.use(express.json({ limit: '100kb' }));

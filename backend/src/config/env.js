@@ -20,7 +20,7 @@ const env = {
   },
   auth: {
     jwtSecret: process.env.JWT_SECRET || 'replace-this-before-production',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
   },
   supabase: {
@@ -29,13 +29,19 @@ const env = {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || ''
   },
   razorpay: {
-    keyId: process.env.RAZORPAY_KEY || '',
-    keySecret: process.env.RAZORPAY_SECRET || '',
-    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || ''
+    keyId: (process.env.RAZORPAY_KEY || '').trim(),
+    keySecret: (process.env.RAZORPAY_SECRET || '').trim(),
+    webhookSecret: (process.env.RAZORPAY_WEBHOOK_SECRET || '').trim()
   },
   resend: {
     apiKey: process.env.RESEND_API_KEY || '',
     fromEmail: process.env.EMAIL_FROM || 'orders@moonbrand.com'
+  },
+  notifications: {
+    adminEmail: process.env.ADMIN_EMAIL || ''
+  },
+  cron: {
+    secret: process.env.CRON_SECRET || ''
   }
 };
 

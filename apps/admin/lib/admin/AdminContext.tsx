@@ -1,7 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { loadAdminSession, clearAdminSession, createAdminSession, saveAdminSession } from './adminAuth';
+import {
+  ADMIN_SESSION_EXPIRED_EVENT,
+  loadAdminSession,
+  clearAdminSession,
+  createAdminSession,
+  saveAdminSession
+} from './adminAuth';
 import { useLoginMutation } from '@/lib/store/services/admin-api';
 import type { AdminSession } from './adminAuth';
 import type { ReactNode } from 'react';
@@ -30,6 +36,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSession(loadAdminSession());
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const handleExpiredSession = () => setSession(null);
+    window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleExpiredSession);
+    return () => window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleExpiredSession);
   }, []);
 
   const login = async (email: string, password: string) => {

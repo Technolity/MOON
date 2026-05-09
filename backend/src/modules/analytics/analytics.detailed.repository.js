@@ -31,7 +31,7 @@ async function getBuyersSummary({ dateFrom, dateTo, limit = 50, offset = 0 } = {
         unit_price,
         subtotal
       ),
-      shipping_addresses (
+      shipping_address:addresses!orders_shipping_address_id_fkey (
         full_name,
         city,
         state
@@ -48,9 +48,9 @@ async function getBuyersSummary({ dateFrom, dateTo, limit = 50, offset = 0 } = {
   for (const order of (orders ?? [])) {
     const email = order.customer_email;
     if (!buyerMap[email]) {
-      const shippingAddr = Array.isArray(order.shipping_addresses)
-        ? order.shipping_addresses[0]
-        : order.shipping_addresses;
+      const shippingAddr = Array.isArray(order.shipping_address)
+        ? order.shipping_address[0]
+        : order.shipping_address;
       buyerMap[email] = {
         email,
         name: shippingAddr?.full_name || email.split('@')[0],
@@ -136,7 +136,7 @@ async function getBuyerDetail(email) {
         unit_price,
         subtotal
       ),
-      shipping_addresses (
+      shipping_address:addresses!orders_shipping_address_id_fkey (
         full_name,
         phone,
         line_1,
@@ -213,7 +213,7 @@ async function getProductBuyers(productId, { dateFrom, dateTo } = {}) {
         customer_phone,
         status,
         created_at,
-        shipping_addresses (
+        shipping_address:addresses!orders_shipping_address_id_fkey (
           full_name,
           city,
           state
@@ -238,9 +238,9 @@ async function getProductBuyers(productId, { dateFrom, dateTo } = {}) {
     if (!order) continue;
     const email = order.customer_email;
     if (!buyerMap[email]) {
-      const addr = Array.isArray(order.shipping_addresses)
-        ? order.shipping_addresses[0]
-        : order.shipping_addresses;
+      const addr = Array.isArray(order.shipping_address)
+        ? order.shipping_address[0]
+        : order.shipping_address;
       buyerMap[email] = {
         email,
         name: addr?.full_name || email.split('@')[0],
@@ -327,7 +327,7 @@ async function getGeoBreakdown({ dateFrom, dateTo } = {}) {
       total,
       status,
       created_at,
-      shipping_addresses (
+      shipping_address:addresses!orders_shipping_address_id_fkey (
         state,
         city,
         postal_code
@@ -343,9 +343,9 @@ async function getGeoBreakdown({ dateFrom, dateTo } = {}) {
   const byCity = {};
 
   for (const order of (data ?? [])) {
-    const addr = Array.isArray(order.shipping_addresses)
-      ? order.shipping_addresses[0]
-      : order.shipping_addresses;
+    const addr = Array.isArray(order.shipping_address)
+      ? order.shipping_address[0]
+      : order.shipping_address;
     const state = addr?.state || 'Unknown';
     const city = addr?.city || 'Unknown';
 

@@ -34,8 +34,20 @@ const getPaymentStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const quickOrder = asyncHandler(async (req, res) => {
+  const result = await paymentsService.quickOrder(req.validated?.body ?? req.body);
+  return sendResponse(res, { status: 201, message: 'Razorpay order created.', data: result });
+});
+
+const quickVerify = asyncHandler(async (req, res) => {
+  const result = await paymentsService.quickVerify(req.validated?.body ?? req.body);
+  return sendResponse(res, { message: 'Payment verified.', data: result });
+});
+
 module.exports = {
   createRazorpayOrder,
   getPaymentStatus,
-  verifyPayment
+  verifyPayment,
+  quickOrder,
+  quickVerify
 };

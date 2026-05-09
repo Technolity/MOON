@@ -34,3 +34,23 @@ services:
         value: https://moonnaturallyyours.com
       - key: REVALIDATE_SECRET
         sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+
+  - type: cron
+    name: moon-weekly-digest
+    runtime: docker
+    schedule: "0 10 * * 1"
+    repo: https://github.com/Technolity/MOON
+    rootDir: backend
+    buildCommand: ""
+    startCommand: >
+      curl -s -X POST "$BACKEND_URL/api/cron/weekly-digest"
+      -H "X-Cron-Secret: $CRON_SECRET"
+    envVars:
+      - key: BACKEND_URL
+        value: https://moon-backend.onrender.com
+      - key: CRON_SECRET
+        sync: false

@@ -455,6 +455,51 @@
         </div>
     </div>
 
+    <div id="checkout-modal" class="cart-modal hidden" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title">
+        <div class="cart-content co-content">
+            <div class="cart-header">
+                <h2 id="checkout-modal-title">Complete Your Order</h2>
+                <button class="close-cart" type="button" id="close-checkout-modal" aria-label="Close checkout">&times;</button>
+            </div>
+
+            <div id="checkout-form-view">
+                <div class="co-summary" id="checkout-summary-list"></div>
+                <div class="cart-footer co-total-row">
+                    <div class="total-row">
+                        <span>Total</span>
+                        <span id="checkout-amount-display">₹0</span>
+                    </div>
+                </div>
+
+                <form id="checkout-contact-form" class="co-form" novalidate>
+                    <div class="co-field">
+                        <label for="co-name">Full Name</label>
+                        <input id="co-name" class="co-input" name="name" type="text" required autocomplete="name" placeholder="Your name" />
+                    </div>
+                    <div class="co-field">
+                        <label for="co-email">Email</label>
+                        <input id="co-email" class="co-input" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+                    </div>
+                    <div class="co-field">
+                        <label for="co-phone">Phone</label>
+                        <input id="co-phone" class="co-input" name="phone" type="tel" required autocomplete="tel" placeholder="10-digit mobile number" />
+                    </div>
+                    <p class="co-error" id="checkout-error" hidden></p>
+                    <button class="checkout-btn co-pay-btn" type="submit" id="checkout-pay-btn">
+                        Pay ₹0 with Razorpay →
+                    </button>
+                </form>
+            </div>
+
+            <div id="checkout-success-view" class="co-success hidden">
+                <div class="co-success-icon">✓</div>
+                <p class="co-success-title">Payment Successful!</p>
+                <p class="co-success-sub">Thank you for your order. A confirmation will be sent to your email.</p>
+                <button class="checkout-btn" type="button" id="checkout-success-close">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/storytelling.js"></script>
     <script src="js/products.js"></script>
     <script src="js/app.js"></script>

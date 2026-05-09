@@ -17,14 +17,31 @@ function parseSection(schema, input, sectionName) {
 function validateRequest(schemas = {}) {
   return (req, res, next) => {
     try {
+      if (req.log) {
+        req.log('validation:start', {
+          sections: Object.keys(schemas),
+          params: req.params,
+          query: req.query,
+          body: req.body
+        });
+      }
+
       req.validated = {
         params: parseSection(schemas.params, req.params, 'route params'),
         query: parseSection(schemas.query, req.query, 'query params'),
         body: parseSection(schemas.body, req.body, 'request body')
       };
 
+      if (req.log) {
+        req.log('validation:success', { validated: req.validated });
+      }
+
       return next();
     } catch (error) {
+      if (req.log) {
+        req.log('validation:error', { error }, 'warn');
+      }
+
       return next(error);
     }
   };

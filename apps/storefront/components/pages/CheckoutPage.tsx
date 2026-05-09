@@ -2,8 +2,16 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { shippingStateOptions } from '@/lib/data/product-statics';
-import { useCalculateShippingMutation, useCreateOrderMutation } from '@/lib/store/services/storefront-api';
+import {
+  useCalculateShippingMutation,
+  useCreateQuickRazorpayOrderMutation,
+  useQuickVerifyPaymentMutation,
+  useValidateDiscountMutation,
+} from '@/lib/store/services/storefront-api';
+import type { ValidatedDiscount } from '@/lib/store/services/storefront-api';
 import type { CartItem } from '@/lib/types';
+
+declare const Razorpay: new (options: object) => { open(): void };
 
 interface CheckoutPageProps {
   items: CartItem[];
@@ -20,11 +28,18 @@ interface CheckoutPageProps {
 
 const defaultShipping = { zone: 'Pending', cost: 0, eta: '-' };
 
-function mapPaymentMethod(method: string) {
-  if (method === 'Cards') return 'card';
-  if (method === 'Net Banking') return 'netbanking';
-  if (method === 'Wallet') return 'wallet';
-  return 'upi';
+function loadRazorpay(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Razorpay) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Razorpay SDK failed to load. Please check your connection.'));
+    document.body.appendChild(script);
+  });
 }
 
 export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: CheckoutPageProps) {
@@ -34,9 +49,15 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
   const [shipping, setShipping] = useState(defaultShipping);
   const [shippingError, setShippingError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<ValidatedDiscount | null>(null);
+  const [discountError, setDiscountError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [calculateShipping, { isLoading: isShippingLoading }] = useCalculateShippingMutation();
-  const [createOrder, { isLoading: isPlacingOrder }] = useCreateOrderMutation();
+  const [createQuickRazorpayOrder] = useCreateQuickRazorpayOrderMutation();
+  const [quickVerifyPayment] = useQuickVerifyPaymentMutation();
+  const [validateDiscount, { isLoading: isApplyingDiscount }] = useValidateDiscountMutation();
 
   useEffect(() => {
     setShipping(defaultShipping);
@@ -71,16 +92,53 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
     };
   }, [calculateShipping, items.length, postalCode, selectedState, subtotal]);
 
-  const total = useMemo(() => subtotal + (items.length ? shipping.cost : 0), [subtotal, shipping.cost, items.length]);
+  const discountAmount = appliedDiscount?.discountAmount ?? 0;
+  const discountedSubtotal = useMemo(
+    () => Math.max(0, subtotal - discountAmount),
+    [discountAmount, subtotal]
+  );
+  const total = useMemo(
+    () => discountedSubtotal + (items.length ? shipping.cost : 0),
+    [discountedSubtotal, shipping.cost, items.length]
+  );
+
+  useEffect(() => {
+    setAppliedDiscount(null);
+    setDiscountError('');
+  }, [items.length, subtotal]);
+
+  const handleApplyDiscount = async () => {
+    const code = discountCode.trim();
+    setDiscountError('');
+    setAppliedDiscount(null);
+
+    if (!code) {
+      setDiscountError('Enter a discount code.');
+      return;
+    }
+
+    try {
+      const discount = await validateDiscount({
+        code,
+        subtotal,
+        shippingCost: items.length ? shipping.cost : 0,
+      }).unwrap();
+      setAppliedDiscount(discount);
+      setDiscountCode(discount.code);
+    } catch (error) {
+      const message =
+        typeof error === 'object' && error && 'data' in error
+          ? ((error as { data?: { message?: string } }).data?.message ?? 'Discount code could not be applied.')
+          : 'Discount code could not be applied.';
+      setDiscountError(message);
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitError('');
 
-    if (items.length === 0) {
-      window.alert('Your cart is empty.');
-      return;
-    }
+    if (items.length === 0 || isProcessing) return;
 
     const formData = new FormData(event.currentTarget);
 
@@ -93,55 +151,124 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
     const address = String(formData.get('address') ?? '').trim();
     const line2 = String(formData.get('address2') ?? '').trim();
 
+    setIsProcessing(true);
     try {
-      const order = await createOrder({
-        customerEmail: email,
-        customerPhone: phone,
-        items: items.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity
-        })),
-        shippingAddress: {
-          fullName,
-          phone,
-          line1: address,
-          line2: line2 || undefined,
-          city,
-          state,
-          postalCode: pincode,
-          country: 'India'
-        },
-        paymentMethod: mapPaymentMethod(paymentMethod),
-        notes: String(formData.get('notes') ?? '').trim() || undefined
+      const amountInPaise = Math.round(total * 100);
+      const receipt = `moon_${Date.now()}`;
+
+      const rzpOrder = await createQuickRazorpayOrder({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt,
+        notes: appliedDiscount
+          ? {
+              discount_code: appliedDiscount.code,
+              discount_amount: String(appliedDiscount.discountAmount),
+              original_subtotal: String(subtotal),
+            }
+          : undefined,
       }).unwrap();
 
-      window.alert(`Order created successfully. Order Number: ${order.order_number}`);
+      if (rzpOrder.keyId === 'dev_key') {
+        // Dev payment mode — no real Razorpay modal, simulate success immediately
+        await quickVerifyPayment({
+          razorpayOrderId: rzpOrder.razorpayOrderId,
+          razorpayPaymentId: `dev_pay_${Date.now()}`,
+          razorpaySignature: 'dev_sig',
+        }).unwrap();
+        await onOrderPlaced({
+          orderNumber: receipt,
+          paymentMethod,
+          total,
+          shippingZone: shipping.zone,
+          shippingCost: shipping.cost,
+        });
+      } else {
+        await loadRazorpay();
 
-      await onOrderPlaced({
-        orderNumber: order.order_number,
-        paymentMethod,
-        total: order.total,
-        shippingZone: shipping.zone,
-        shippingCost: shipping.cost
-      });
+        await new Promise<void>((resolve, reject) => {
+          const rzp = new Razorpay({
+            key: rzpOrder.keyId,
+            amount: rzpOrder.amount,
+            currency: rzpOrder.currency,
+            order_id: rzpOrder.razorpayOrderId,
+            name: 'MOON',
+            description: items.map((i) => `${i.title} x${i.quantity}`).join(', '),
+            prefill: { name: fullName, email, contact: phone },
+            notes: { city, state, pincode, address },
+            handler: async (response: {
+              razorpay_payment_id: string;
+              razorpay_order_id: string;
+              razorpay_signature: string;
+            }) => {
+              try {
+                await quickVerifyPayment({
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }).unwrap();
+                await onOrderPlaced({
+                  orderNumber: receipt,
+                  paymentMethod,
+                  total,
+                  shippingZone: shipping.zone,
+                  shippingCost: shipping.cost,
+                });
+                resolve();
+              } catch {
+                reject(new Error('Payment verification failed. Please contact support with your payment ID.'));
+              }
+            },
+            modal: {
+              ondismiss: () => reject(new Error('Payment was cancelled. You can try again.')),
+            },
+          });
+          rzp.open();
+        });
+      }
     } catch (error) {
       const message =
-        typeof error === 'object' && error && 'data' in error
-          ? ((error as { data?: { message?: string } }).data?.message ?? 'Checkout failed. Please check your details and try again.')
-          : 'Checkout failed. Please check your details and try again.';
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error && 'data' in error
+            ? ((error as { data?: { message?: string } }).data?.message ?? 'Checkout failed. Please check your details and try again.')
+            : 'Checkout failed. Please check your details and try again.';
 
       setSubmitError(message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
+  if (items.length === 0) {
+    return (
+      <main id="main-content" className="checkout-page section-padding route-page" data-module="checkout-page">
+        <div className="checkout-page-shell">
+          <div className="checkout-content">
+            <div className="checkout-header">
+              <h2 id="checkout-title">Your cart is empty</h2>
+              <button className="route-ghost-btn" type="button" onClick={onBackToCart}>← Back to Shop</button>
+            </div>
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#5f5447' }}>
+              <p style={{ marginBottom: '1rem' }}>Add some products before checking out.</p>
+              <button className="pay-now-btn" type="button" onClick={onBackToCart} style={{ maxWidth: 240, margin: '0 auto' }}>
+                Continue Shopping
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main id="main-content" className="checkout-page section-padding route-page" data-module="checkout-page">
-      <div className="route-head reveal">
+      <div className="route-head">
         <p className="label">Checkout</p>
         <h1 className="section-heading">Shipping & Payment</h1>
       </div>
 
-      <div className="checkout-page-shell reveal">
+      <div className="checkout-page-shell">
         <div className="checkout-content">
           <div className="checkout-header">
             <h2 id="checkout-title">Complete Your Order</h2>
@@ -262,6 +389,42 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
                 <span>ETA</span>
                 <span>{shipping.eta}</span>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '14px 0' }}>
+                <label htmlFor="discount-code" style={{ fontSize: 12, color: '#5f5447', fontWeight: 600 }}>Discount code</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+                  <input
+                    id="discount-code"
+                    className="checkout-input"
+                    value={discountCode}
+                    onChange={(event) => {
+                      setDiscountCode(event.target.value.toUpperCase());
+                      setAppliedDiscount(null);
+                      setDiscountError('');
+                    }}
+                    placeholder="PAYTEST"
+                    style={{ minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    className="route-ghost-btn"
+                    onClick={handleApplyDiscount}
+                    disabled={isApplyingDiscount || items.length === 0}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {isApplyingDiscount ? 'Checking...' : 'Apply'}
+                  </button>
+                </div>
+                {appliedDiscount ? (
+                  <p className="text-xs text-green-700 mt-1">{appliedDiscount.code} applied: -₹{appliedDiscount.discountAmount.toLocaleString('en-IN')}</p>
+                ) : null}
+                {discountError ? <p className="text-xs text-red-600 mt-1">{discountError}</p> : null}
+              </div>
+              {appliedDiscount ? (
+                <div className="summary-item">
+                  <span>Discount ({appliedDiscount.code})</span>
+                  <span>-₹{appliedDiscount.discountAmount.toLocaleString('en-IN')}</span>
+                </div>
+              ) : null}
               <div className="summary-total">
                 <span>Total</span>
                 <span id="checkout-total">₹{total}</span>
@@ -270,8 +433,8 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
               {shippingError ? <p className="text-xs text-amber-600 mt-2">{shippingError}</p> : null}
               {submitError ? <p className="text-xs text-red-600 mt-2">{submitError}</p> : null}
 
-              <button id="pay-now-btn" className="pay-now-btn" type="submit" form="checkout-form" disabled={items.length === 0 || isPlacingOrder}>
-                {isPlacingOrder ? 'Placing Order...' : isShippingLoading ? 'Calculating Shipping...' : 'Continue to Razorpay'}
+              <button id="pay-now-btn" className="pay-now-btn" type="submit" form="checkout-form" disabled={isProcessing}>
+                {isProcessing ? 'Opening Payment...' : isShippingLoading ? 'Calculating Shipping...' : `Pay ₹${total.toLocaleString('en-IN')} →`}
               </button>
             </aside>
           </div>

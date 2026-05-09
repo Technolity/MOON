@@ -7,7 +7,9 @@ import { Footer } from './Footer';
 import { CartDrawer } from './CartDrawer';
 import { ProductDetailModal } from './ProductDetailModal';
 import { AppContext } from './AppContext';
-import { catalogItems as staticCatalogItems, productOrder, productStories } from '@/lib/data/product-statics';
+import { WhatsAppWidget } from './WhatsAppWidget';
+import { productOrder, productStories } from '@/lib/data/product-statics';
+import { mapBackendProductsToCatalogItems, productKeyBySlug } from '@/lib/products/catalog';
 import { useRevealAnimation } from '@/hooks/useRevealAnimation';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
@@ -19,20 +21,10 @@ import {
 } from '@/lib/store/services/storefront-api';
 import { getGuestCartSessionId } from '@/lib/store/services/cartSession';
 import { addItem, clearCart, removeItem, setItems } from '@/lib/store/slices/cartSlice';
-import type { BackendCartItem, BackendProduct } from '@/lib/store/services/storefront-api';
-import type { CatalogItem, ProductKey } from '@/lib/types';
+import { CART_STORAGE_KEY } from '@/lib/store';
+import type { BackendCartItem } from '@/lib/store/services/storefront-api';
+import type { CartItem, CatalogItem, ProductKey } from '@/lib/types';
 import type { ReactNode } from 'react';
-
-const productKeyBySlug: Record<string, ProductKey> = {
-  shilajit: 'shilajit',
-  'kashmiri-saffron': 'kashmiriSaffron',
-  'kashmiri-honey': 'kashmiriHoney',
-  'irani-saffron': 'iraniSaffron',
-  'kashmiri-almonds': 'kashmiriAlmonds',
-  walnuts: 'walnuts',
-  'kashmiri-walnuts': 'walnuts',
-  'kashmiri-ghee': 'kashmiriGhee',
-};
 
 const slugByProductKey: Partial<Record<ProductKey, string>> = {
   shilajit: 'shilajit',
@@ -44,20 +36,6 @@ const slugByProductKey: Partial<Record<ProductKey, string>> = {
   kashmiriGhee: 'kashmiri-ghee',
 };
 
-const productKeyByName: Record<string, ProductKey> = {
-  shilajit: 'shilajit',
-  'kashmiri saffron': 'kashmiriSaffron',
-  'irani saffron': 'iraniSaffron',
-  'kashmiri almonds': 'kashmiriAlmonds',
-  walnuts: 'walnuts',
-  'kashmiri ghee': 'kashmiriGhee',
-};
-
-const fallbackCatalogByKey = staticCatalogItems.reduce((map, item) => {
-  if (item.productKey) map[item.productKey] = item;
-  return map;
-}, {} as Record<ProductKey, CatalogItem>);
-
 function trackEvent(eventName: string, payload: Record<string, unknown>) {
   if (typeof window !== 'undefined' && typeof (window as typeof window & { gtag?: Function }).gtag === 'function') {
     (window as typeof window & { gtag: Function }).gtag('event', eventName, {
@@ -65,21 +43,6 @@ function trackEvent(eventName: string, payload: Record<string, unknown>) {
       ...payload,
     });
   }
-}
-
-function normalizeLegacyFramePath(imageUrl: string | null | undefined) {
-  if (!imageUrl) return imageUrl ?? undefined;
-  return imageUrl.replace(
-    /(\/(?:moon2222|moon333|ezgif-2fae6b36993927b6-jpg)\/ezgif-frame-\d{3})\.jpg$/i,
-    '$1.png'
-  );
-}
-
-function inferProductKey(product: BackendProduct): ProductKey | null {
-  if (product.slug && productKeyBySlug[product.slug]) return productKeyBySlug[product.slug];
-  const normalizedName = product.name.trim().toLowerCase();
-  if (productKeyByName[normalizedName]) return productKeyByName[normalizedName];
-  return null;
 }
 
 function mapBackendCartItems(items: BackendCartItem[], catalog: CatalogItem[] = []) {
@@ -105,6 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [activeProduct, setActiveProduct] = useState<ProductKey>('shilajit');
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CatalogItem | null>(null);
+  const [isClosingProductRoute, setIsClosingProductRoute] = useState(false);
 
   const { data: backendProducts } = useGetProductsQuery();
   const { data: backendCartItems, isSuccess: isCartLoaded } = useGetCartQuery({ sessionId: guestSessionId });
@@ -113,29 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [clearCartMutation] = useClearCartMutation();
 
   const catalogItems = useMemo(() => {
-    if (!backendProducts || backendProducts.length === 0) return staticCatalogItems;
-    const fromBackend: Partial<Record<ProductKey, CatalogItem>> = {};
-    backendProducts.forEach((product) => {
-      const key = inferProductKey(product);
-      if (!key) return;
-      const fallback = fallbackCatalogByKey[key];
-      fromBackend[key] = {
-        id: product.id,
-        title: product.name,
-        subtitle: product.description || fallback.subtitle,
-        price: Number(product.discount_price ?? product.price),
-        image: normalizeLegacyFramePath(product.image_url) || fallback.image,
-        alt: fallback.alt,
-        featured: fallback.featured,
-        productKey: key,
-        inStock: product.in_stock != null
-          ? Boolean(product.in_stock)
-          : product.inventory
-            ? (product.inventory.quantity - product.inventory.reserved) > 0
-            : true,
-      };
-    });
-    return productOrder.map((key) => fromBackend[key] ?? fallbackCatalogByKey[key]).filter(Boolean);
+    return mapBackendProductsToCatalogItems(backendProducts);
   }, [backendProducts]);
 
   const catalogByProductKey = useMemo(
@@ -157,10 +99,25 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useRevealAnimation();
 
+  // Restore persisted cart from localStorage after client mount (avoids SSR hydration mismatch)
   useEffect(() => {
-    if (isCartLoaded && backendCartItems) {
-      dispatch(setItems(mapBackendCartItems(backendCartItems, catalogItems)));
-    }
+    try {
+      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      if (!raw) return;
+      const parsed: CartItem[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        dispatch(setItems(parsed));
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isCartLoaded || !backendCartItems) return;
+    const mapped = mapBackendCartItems(backendCartItems, catalogItems);
+    // Skip empty backend response — never wipe a locally-added cart that hasn't synced yet
+    if (mapped.length === 0) return;
+    dispatch(setItems(mapped));
   }, [backendCartItems, catalogItems, dispatch, isCartLoaded]);
 
   useEffect(() => {
@@ -209,16 +166,27 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const match = pathname.match(/^\/products\/(.+)$/);
     if (!match) return;
+    if (isClosingProductRoute) return;
     const slug = match[1];
+    const backendProduct = backendProducts?.find((product) => product.slug === slug);
     const productKey = productKeyBySlug[slug];
-    if (!productKey) return;
-    const item = catalogItems.find((ci) => ci.productKey === productKey);
-    if (item && (!selectedProduct || selectedProduct.productKey !== productKey)) {
+    const item = backendProduct
+      ? catalogItems.find((ci) => ci.id === backendProduct.id)
+      : productKey
+        ? catalogItems.find((ci) => ci.productKey === productKey)
+        : null;
+    if (item && (!selectedProduct || selectedProduct.id !== item.id)) {
       setSelectedProduct(item);
       setIsCartDrawerOpen(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, catalogItems]);
+  }, [pathname, catalogItems, backendProducts, isClosingProductRoute]);
+
+  useEffect(() => {
+    if (!isClosingProductRoute || pathname.startsWith('/products/')) return;
+    setSelectedProduct(null);
+    setIsClosingProductRoute(false);
+  }, [isClosingProductRoute, pathname]);
 
   const cartSubtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -265,13 +233,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const handleProductClick = (item: CatalogItem) => {
+    setIsClosingProductRoute(false);
     setSelectedProduct(item);
     setIsCartDrawerOpen(false);
-    if (item.productKey) {
-      const slug = slugByProductKey[item.productKey];
-      if (slug && pathname !== `/products/${slug}`) {
-        router.push(`/products/${slug}`);
-      }
+    const backendSlug = backendProducts?.find((product) => product.id === item.id)?.slug;
+    const slug = backendSlug ?? (item.productKey ? slugByProductKey[item.productKey] : undefined);
+    if (slug && pathname !== `/products/${slug}`) {
+      router.push(`/products/${slug}`);
     }
   };
 
@@ -356,15 +324,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ProductDetailModal
           item={selectedProduct}
           onClose={() => {
-            setSelectedProduct(null);
             if (pathname.startsWith('/products/')) {
+              setIsClosingProductRoute(true);
               router.replace('/#shop');
+              return;
             }
+            setSelectedProduct(null);
           }}
           onAddToCart={async (item) => {
-            setSelectedProduct(null);
             if (pathname.startsWith('/products/')) {
+              setIsClosingProductRoute(true);
               router.replace('/#shop');
+            } else {
+              setSelectedProduct(null);
             }
             await handleAddCatalogItem(item);
           }}
@@ -372,6 +344,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {!isAdminRoute ? <Footer /> : null}
+
+      {!isAdminRoute ? <WhatsAppWidget /> : null}
     </AppContext.Provider>
   );
 }

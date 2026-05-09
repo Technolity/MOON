@@ -1,5 +1,6 @@
 const env = require('../../config/env');
 const ApiError = require('../errors/api-error');
+const { requestDetails, write } = require('../utils/debug-log');
 
 function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
   const isApiError = err instanceof ApiError;
@@ -7,9 +8,18 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
   const statusCode = isApiError ? err.statusCode : 500;
   const message = isApiError ? err.message : 'Internal server error.';
 
-  // Only log 5xx — 4xx are client mistakes, not worth filling logs
-  if (!isApiError || statusCode >= 500) {
-    console.error('[error]', err);
+  const logLevel = statusCode >= 500 ? 'error' : 'warn';
+  const details = {
+    ...requestDetails(req),
+    statusCode,
+    isApiError,
+    error: err
+  };
+
+  if (req.log) {
+    req.log('error:handled', details, logLevel);
+  } else {
+    write(logLevel, 'backend', 'error:handled', details);
   }
 
   const body = { success: false, message };

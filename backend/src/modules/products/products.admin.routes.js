@@ -31,6 +31,11 @@ const imageSchema = z.array(
   })
 ).min(0);
 
+const imagePayloadSchema = z.union([
+  imageSchema,
+  z.object({ images: imageSchema })
+]).transform((payload) => (Array.isArray(payload) ? payload : payload.images));
+
 router.get('/', async (_req, res, next) => {
   try {
     const products = await repo.adminListProducts();
@@ -46,7 +51,25 @@ router.post('/', async (req, res, next) => {
     if (!parsed.success) {
       return next(new ApiError(400, parsed.error.issues.map((i) => i.message).join('; ')));
     }
-    const product = await repo.adminCreateProduct({ ...parsed.data, updated_by: req.user.id });
+
+    // Auto-generate URL-safe slug from product name
+    const slugBase = parsed.data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const slug = slugBase + '-' + Date.now().toString(36);
+
+    // Provide sensible defaults for NOT NULL DB columns when not supplied by admin
+    const category = parsed.data.category || 'General';
+    const theme = parsed.data.theme || 'Default';
+
+    const product = await repo.adminCreateProduct({
+      ...parsed.data,
+      slug,
+      category,
+      theme,
+      updated_by: req.user.id,
+    });
     revalidateStorefront(['/products', '/'], ['products']).catch(() => {});
     res.status(201).json({ product });
   } catch (err) {
@@ -83,7 +106,7 @@ router.delete('/:id', async (req, res, next) => {
 
 router.put('/:id/images', async (req, res, next) => {
   try {
-    const parsed = imageSchema.safeParse(req.body);
+    const parsed = imagePayloadSchema.safeParse(req.body);
     if (!parsed.success) {
       return next(new ApiError(400, parsed.error.issues.map((i) => i.message).join('; ')));
     }
@@ -91,7 +114,10 @@ router.put('/:id/images', async (req, res, next) => {
       images: parsed.data,
       updated_by: req.user.id,
     });
-    revalidateStorefront(['/products/' + product.slug], ['product-' + product.slug]).catch(() => {});
+    revalidateStorefront(
+      ['/', '/products', '/products/' + product.slug],
+      ['products', 'product-' + product.slug]
+    ).catch(() => {});
     res.json({ product });
   } catch (err) {
     next(err);

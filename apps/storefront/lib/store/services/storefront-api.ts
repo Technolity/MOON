@@ -72,6 +72,42 @@ export interface CreatedOrder {
   total: number;
 }
 
+export interface RazorpayOrderPayload { orderId: string }
+export interface RazorpayOrderResult {
+  razorpayOrderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  orderId: string;
+  orderNumber: string;
+  customerEmail: string;
+  customerPhone: string;
+}
+export interface VerifyPaymentPayload {
+  orderId: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}
+export interface VerifyPaymentResult { verified: boolean }
+
+export interface QuickRazorpayOrderPayload { amount: number; currency?: string; receipt: string; notes?: Record<string, string> }
+export interface QuickRazorpayOrderResult { razorpayOrderId: string; amount: number; currency: string; keyId: string }
+export interface QuickVerifyPayload { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }
+export interface ValidateDiscountPayload { code: string; subtotal: number; shippingCost?: number }
+export interface ValidatedDiscount {
+  id: string;
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  discountAmount: number;
+  subtotal: number;
+  discountedSubtotal: number;
+  shippingCost: number;
+  totalAfterDiscount: number;
+  message: string;
+}
+
 const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api').replace(/\/+$/, '');
 
 const unwrap = <T>(response: ApiEnvelope<T>) => response.data;
@@ -148,12 +184,41 @@ export const storefrontApi = createApi({
       transformResponse: unwrap,
     }),
 
+    validateDiscount: builder.mutation<ValidatedDiscount, ValidateDiscountPayload>({
+      query: (body) => ({
+        url: '/discounts/validate',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: unwrap,
+    }),
+
     createOrder: builder.mutation<CreatedOrder, CreateOrderPayload>({
       query: (body) => ({
         url: '/orders',
         method: 'POST',
         body,
       }),
+      transformResponse: unwrap,
+    }),
+
+    createRazorpayOrder: builder.mutation<RazorpayOrderResult, RazorpayOrderPayload>({
+      query: (body) => ({ url: '/payments/razorpay', method: 'POST', body }),
+      transformResponse: unwrap,
+    }),
+
+    verifyPayment: builder.mutation<VerifyPaymentResult, VerifyPaymentPayload>({
+      query: (body) => ({ url: '/payments/verify', method: 'POST', body }),
+      transformResponse: unwrap,
+    }),
+
+    createQuickRazorpayOrder: builder.mutation<QuickRazorpayOrderResult, QuickRazorpayOrderPayload>({
+      query: (body) => ({ url: '/payments/quick-order', method: 'POST', body }),
+      transformResponse: unwrap,
+    }),
+
+    quickVerifyPayment: builder.mutation<VerifyPaymentResult, QuickVerifyPayload>({
+      query: (body) => ({ url: '/payments/quick-verify', method: 'POST', body }),
       transformResponse: unwrap,
     }),
   }),
@@ -167,5 +232,10 @@ export const {
   useRemoveCartItemMutation,
   useClearCartMutation,
   useCalculateShippingMutation,
+  useValidateDiscountMutation,
   useCreateOrderMutation,
+  useCreateRazorpayOrderMutation,
+  useVerifyPaymentMutation,
+  useCreateQuickRazorpayOrderMutation,
+  useQuickVerifyPaymentMutation,
 } = storefrontApi;

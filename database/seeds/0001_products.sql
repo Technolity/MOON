@@ -12,76 +12,88 @@ insert into public.products (
 )
 values
   (
+    'Shilajit',
+    'shilajit',
+    'Gold-grade Himalayan resin harvested above 4,000 metres. Rich in fulvic acid and trace minerals for focus, stamina, and recovery.',
+    1999.00,
+    null,
+    'moon333/ezgif-frame-162.png',
+    'wellness',
+    'shilajit',
+    'Shilajit | MOON',
+    'Gold-grade Himalayan resin for focus, stamina, and recovery.'
+  ),
+  (
     'Kashmiri Saffron',
     'kashmiri-saffron',
-    'Hand-selected Mongra A++ saffron sourced from Pampore for aroma, color, and daily ritual use.',
-    850.00,
+    'Mongra A++ threads picked before sunrise in the Valley. The finest saffron Kashmir produces — for flavour, colour, and ritual.',
+    1250.00,
     null,
-    'moon2222/ezgif-frame-120.jpg',
+    'moon2222/ezgif-frame-162.png',
     'wellness',
     'saffron',
     'Kashmiri Saffron | MOON',
-    'Premium Mongra A++ saffron for wellness rituals and culinary use.'
+    'Mongra A++ Kashmiri saffron for wellness rituals and culinary excellence.'
   ),
   (
-    'Sidr Honey',
-    'sidr-honey',
-    'Raw Sidr honey with a deep caramel profile and rich daily wellness appeal.',
-    1500.00,
+    'Kashmiri Honey',
+    'kashmiri-honey',
+    'Wild mountain honey — raw and unfiltered from alpine Kashmir meadows. Deep floral notes with natural antibacterial properties.',
+    1150.00,
     null,
-    'ezgif-2fae6b36993927b6-jpg/ezgif-frame-118.jpg',
+    'ezgif-2fae6b36993927b6-jpg/ezgif-frame-146.png',
     'wellness',
     'honey',
-    'Sidr Honey | MOON',
-    'Pure Sidr honey curated for premium taste and everyday wellness.'
+    'Kashmiri Honey | MOON',
+    'Raw unfiltered Kashmiri wild mountain honey with rich floral character.'
   ),
   (
-    'Pure Shilajit',
-    'pure-shilajit',
-    'Purified Himalayan resin rich in fulvic acid and trace minerals.',
-    1999.00,
+    'Irani Saffron',
+    'irani-saffron',
+    'Irani Negin saffron — strong colour, balanced character. Premium Persian saffron for the discerning cook and wellness seeker.',
+    1050.00,
     null,
-    'moon333/ezgif-frame-125.jpg',
+    'ezgif-2fae6b36993927b6-jpg/ezgif-frame-146.png',
     'wellness',
-    'shilajit',
-    'Pure Shilajit | MOON',
-    'High-potency Himalayan shilajit resin for focus, stamina, and recovery.'
+    'honey',
+    'Irani Saffron | MOON',
+    'Premium Negin Irani saffron with rich colour and balanced aroma.'
   ),
   (
-    'Premium Dates',
-    'premium-dates',
-    'Ajwa and Medjool dates curated as a premium daily nourishment option.',
-    1200.00,
+    'Kashmiri Almonds',
+    'kashmiri-almonds',
+    'Premium whole Kashmiri almond kernels — clean fats, natural vitamin E, orchard grown in the Valley.',
+    899.00,
     null,
-    'moon2222/ezgif-frame-056.jpg',
+    'moon2222/ezgif-frame-162.png',
     'food',
-    'saffron',
-    'Premium Dates | MOON',
-    'Curated Ajwa and Medjool dates for gifting and daily nourishment.'
-  ),
-  (
-    'Traditional Kufa',
-    'traditional-kufa',
-    'Hand-knit cotton kufa designed for daily wear with a clean traditional finish.',
-    499.00,
-    null,
-    'moon333/ezgif-frame-051.jpg',
-    'apparel',
-    'shilajit',
-    'Traditional Kufa | MOON',
-    'Traditional hand-knit kufa crafted for daily wear and gifting.'
-  ),
-  (
-    'The Sunnah Box',
-    'the-sunnah-box',
-    'A curated ritual bundle that combines signature MOON products in one gift-ready box.',
-    4500.00,
-    null,
-    'ezgif-2fae6b36993927b6-jpg/ezgif-frame-159.jpg',
-    'bundle',
     'honey',
-    'The Sunnah Box | MOON',
-    'Gift-ready wellness bundle with premium signature MOON essentials.'
+    'Kashmiri Almonds | MOON',
+    'Premium whole Kashmiri almonds — natural vitamin E and healthy fats.'
+  ),
+  (
+    'Walnuts',
+    'kashmiri-walnuts',
+    'Kashmiri walnuts from Lolab orchards — omega-rich, fresh-crop, orchard select. Harvested at peak nutrition.',
+    950.00,
+    null,
+    'moon333/ezgif-frame-162.png',
+    'food',
+    'honey',
+    'Kashmiri Walnuts | MOON',
+    'Omega-rich Kashmiri walnuts, fresh-crop orchard select from Lolab.'
+  ),
+  (
+    'Kashmiri Ghee',
+    'kashmiri-ghee',
+    'Traditional bilona ghee from Bangus Valley — slow-churned, small-batch. The purest expression of mountain milk.',
+    1350.00,
+    null,
+    'ezgif-2fae6b36993927b6-jpg/ezgif-frame-146.png',
+    'wellness',
+    'saffron',
+    'Kashmiri Ghee | MOON',
+    'Slow-churned traditional bilona ghee from Kashmiri mountain cows.'
   )
 on conflict (slug) do update
 set
@@ -104,12 +116,13 @@ select
   seeds.sku
 from (
   values
-    ('kashmiri-saffron', 30, 'MOON-SAF-001'),
-    ('sidr-honey', 20, 'MOON-HON-001'),
-    ('pure-shilajit', 25, 'MOON-SHI-001'),
-    ('premium-dates', 40, 'MOON-DAT-001'),
-    ('traditional-kufa', 50, 'MOON-KUF-001'),
-    ('the-sunnah-box', 15, 'MOON-BOX-001')
+    ('shilajit',         50, 'MOON-SHL-001'),
+    ('kashmiri-saffron', 30, 'MOON-KSF-002'),
+    ('kashmiri-honey',   25, 'MOON-KHN-007'),
+    ('irani-saffron',    35, 'MOON-IRS-003'),
+    ('kashmiri-almonds', 60, 'MOON-KAL-004'),
+    ('kashmiri-walnuts', 45, 'MOON-WAL-005'),
+    ('kashmiri-ghee',    20, 'MOON-KGH-006')
 ) as seeds(slug, quantity, sku)
 join public.products products
   on products.slug = seeds.slug

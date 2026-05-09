@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Btn } from '@/components/ui/Btn';
 import { Brand } from '@/components/ui/Brand';
 import type { AdminSession } from './adminAuth';
+import { ADMIN_SETTINGS_STORAGE_KEY, ADMIN_SETTINGS_UPDATED_EVENT, applyAdminAppearanceSettings } from './adminSettings';
 import type { ReactNode } from 'react';
 
 /* ─── NAV CONFIG ──────────────────────────────────────────────────── */
@@ -439,7 +440,27 @@ export function AdminLayout({ session, onLogout, children }: AdminLayoutProps) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('moon-theme', theme);
+    applyAdminAppearanceSettings();
   }, [theme]);
+
+  useEffect(() => {
+    applyAdminAppearanceSettings();
+
+    const handleSettingsUpdate = () => applyAdminAppearanceSettings();
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === ADMIN_SETTINGS_STORAGE_KEY) {
+        applyAdminAppearanceSettings();
+      }
+    };
+
+    window.addEventListener(ADMIN_SETTINGS_UPDATED_EVENT, handleSettingsUpdate);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener(ADMIN_SETTINGS_UPDATED_EVENT, handleSettingsUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 

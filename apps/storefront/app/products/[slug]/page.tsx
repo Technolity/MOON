@@ -2,24 +2,42 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { catalogItems as staticCatalog } from '@/lib/data/product-statics';
+import { normalizeProductImageUrl, stockImageForProduct } from '@/lib/products/images';
+import type { ProductKey } from '@/lib/types';
 
 export const revalidate = 3600;
 
 const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api').replace(/\/+$/, '');
 
+const slugToProductKey: Record<string, ProductKey> = {
+  shilajit: 'shilajit',
+  'pure-shilajit': 'shilajit',
+  'kashmiri-saffron': 'kashmiriSaffron',
+  'kashmiri-honey': 'kashmiriHoney',
+  'sidr-honey': 'kashmiriHoney',
+  'irani-saffron': 'iraniSaffron',
+  'kashmiri-almonds': 'kashmiriAlmonds',
+  'kashmiri-walnuts': 'walnuts',
+  walnuts: 'walnuts',
+  'kashmiri-ghee': 'kashmiriGhee',
+};
+
+const productKeyByName: Record<string, ProductKey> = {
+  shilajit: 'shilajit',
+  'pure shilajit': 'shilajit',
+  'kashmiri saffron': 'kashmiriSaffron',
+  'kashmiri honey': 'kashmiriHoney',
+  'sidr honey': 'kashmiriHoney',
+  'irani saffron': 'iraniSaffron',
+  'kashmiri almonds': 'kashmiriAlmonds',
+  'kashmiri walnuts': 'walnuts',
+  walnuts: 'walnuts',
+  'kashmiri ghee': 'kashmiriGhee',
+};
+
 const slugToStaticProduct: Record<string, BackendProduct> = (() => {
-  const slugMap: Record<string, string> = {
-    shilajit: 'shilajit',
-    'kashmiri-saffron': 'kashmiriSaffron',
-    'kashmiri-honey': 'kashmiriHoney',
-    'irani-saffron': 'iraniSaffron',
-    'kashmiri-almonds': 'kashmiriAlmonds',
-    'kashmiri-walnuts': 'walnuts',
-    walnuts: 'walnuts',
-    'kashmiri-ghee': 'kashmiriGhee',
-  };
   const result: Record<string, BackendProduct> = {};
-  for (const [slug, key] of Object.entries(slugMap)) {
+  for (const [slug, key] of Object.entries(slugToProductKey)) {
     const item = staticCatalog.find(c => c.productKey === key);
     if (item) {
       result[slug] = {
@@ -34,6 +52,26 @@ const slugToStaticProduct: Record<string, BackendProduct> = (() => {
   }
   return result;
 })();
+
+function inferProductKey(product: BackendProduct): ProductKey | null {
+  return slugToProductKey[product.slug] ?? productKeyByName[product.name.trim().toLowerCase()] ?? null;
+}
+
+function staticFallbackImage(product: BackendProduct, key: ProductKey | null) {
+  const fallback = key ? staticCatalog.find((item) => item.productKey === key) : undefined;
+  return normalizeProductImageUrl(fallback?.image);
+}
+
+function firstRenderableImage(product: BackendProduct) {
+  const key = inferProductKey(product);
+  const firstImage = [...(product.images ?? [])].sort((a, b) => a.order - b.order)[0]?.url;
+  return (
+    normalizeProductImageUrl(firstImage) ||
+    normalizeProductImageUrl(product.image_url) ||
+    staticFallbackImage(product, key) ||
+    stockImageForProduct(key, product.theme)
+  );
+}
 
 interface ProductImage {
   url: string;
@@ -92,7 +130,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     product.meta_description ||
     product.description ||
     `Shop ${product.name} at MOON Naturally Yours — premium single-origin wellness products from Kashmir.`;
-  const imageUrl = product.images?.[0]?.url || product.image_url;
+  const imageUrl = firstRenderableImage(product);
 
   return {
     title,
@@ -122,9 +160,17 @@ export default async function ProductPage({ params }: Props) {
   const product = (await fetchProduct(slug)) ?? slugToStaticProduct[slug] ?? null;
   if (!product) notFound();
 
-  const sortedImages = [...(product.images ?? [])].sort((a, b) => a.order - b.order);
+  const productKey = inferProductKey(product);
+  const sortedImages = [...(product.images ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((img) => ({ ...img, url: normalizeProductImageUrl(img.url) }))
+    .filter((img): img is ProductImage & { url: string } => Boolean(img.url));
   const primaryImage = sortedImages[0] ?? null;
-  const imageUrl = primaryImage?.url || product.image_url;
+  const imageUrl =
+    primaryImage?.url ||
+    normalizeProductImageUrl(product.image_url) ||
+    staticFallbackImage(product, productKey) ||
+    stockImageForProduct(productKey, product.theme);
   const blurDataUrl = primaryImage?.blurDataUrl ?? undefined;
 
   const displayPrice = Number(product.discount_price ?? product.price);

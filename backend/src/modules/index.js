@@ -6,6 +6,8 @@ const authRoutes = require('./auth/auth.routes');
 const cartRoutes = require('./cart/cart.routes');
 const categoriesAdminRoutes = require('./categories/categories.admin.routes');
 const customersAdminRoutes = require('./customers/customers.admin.routes');
+const discountsRoutes = require('./discounts/discounts.routes');
+const discountsAdminRoutes = require('./discounts/discounts.admin.routes');
 const healthRoutes = require('./health/health.routes');
 const inventoryRoutes = require('./inventory/inventory.routes');
 const notificationsRoutes = require('./notifications/notifications.routes');
@@ -16,6 +18,8 @@ const productsRoutes = require('./products/products.routes');
 const productsAdminRoutes = require('./products/products.admin.routes');
 const productsUploadRoutes = require('./products/products.upload.routes');
 const shippingRoutes = require('./shipping/shipping.routes');
+const newsletterRoutes = require('./newsletter/newsletter.routes');
+const cronRoutes = require('./cron/cron.routes');
 
 const router = express.Router();
 
@@ -23,6 +27,7 @@ router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/products', productsRoutes);
 router.use('/cart', cartRoutes);
+router.use('/discounts', discountsRoutes);
 router.use('/orders', ordersRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/shipping', shippingRoutes);
@@ -35,5 +40,9 @@ router.use('/admin/products', productsUploadRoutes);
 router.use('/admin/orders', ordersAdminRoutes);
 router.use('/admin/customers', customersAdminRoutes);
 router.use('/admin/categories', categoriesAdminRoutes);
+router.use('/admin/discounts', discountsAdminRoutes);
+router.use('/newsletter', newsletterRoutes.public);
+router.use('/admin/newsletter', newsletterRoutes.admin);
+router.use('/cron', cronRoutes);
 
 module.exports = router;
