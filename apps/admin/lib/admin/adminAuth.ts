@@ -1,6 +1,5 @@
 export interface AdminSession {
   userId: string;
-  token: string;
   email: string;
   name: string | null;
   role: 'admin';
@@ -10,28 +9,24 @@ export interface AdminSession {
 const ADMIN_SESSION_KEY = 'moon_admin_owner_session_v2';
 export const ADMIN_SESSION_EXPIRED_EVENT = 'moon_admin_session_expired';
 
-interface LoginPayload {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    role: string;
-    first_name?: string | null;
-    last_name?: string | null;
-  };
+interface UserPayload {
+  id: string;
+  email: string;
+  role: string;
+  first_name?: string | null;
+  last_name?: string | null;
 }
 
-function resolveDisplayName(user: LoginPayload['user']) {
+function resolveDisplayName(user: UserPayload) {
   const first = user.first_name?.trim() ?? '';
   const last = user.last_name?.trim() ?? '';
   const joined = `${first} ${last}`.trim();
   return joined || null;
 }
 
-export function createAdminSession(payload: LoginPayload): AdminSession {
+export function createAdminSession(payload: { user: UserPayload }): AdminSession {
   return {
     userId: payload.user.id,
-    token: payload.token,
     email: String(payload.user.email).trim().toLowerCase(),
     name: resolveDisplayName(payload.user),
     role: 'admin',
@@ -57,25 +52,6 @@ export function expireAdminSession() {
   notifySessionExpired();
 }
 
-function decodeBase64Url(value: string) {
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
-  return window.atob(padded);
-}
-
-function isJwtExpired(token: string, skewMs = 30_000) {
-  if (typeof window === 'undefined') return false;
-  const [, payload] = token.split('.');
-  if (!payload) return false;
-
-  try {
-    const parsed = JSON.parse(decodeBase64Url(payload)) as { exp?: number };
-    if (!parsed.exp) return false;
-    return parsed.exp * 1000 <= Date.now() + skewMs;
-  } catch {
-    return false;
-  }
-}
-
 export function loadAdminSession(): AdminSession | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem(ADMIN_SESSION_KEY);
@@ -83,12 +59,8 @@ export function loadAdminSession(): AdminSession | null {
 
   try {
     const parsed = JSON.parse(raw) as AdminSession;
-    if (parsed.role !== 'admin' || !parsed.email || !parsed.token || !parsed.userId) {
+    if (parsed.role !== 'admin' || !parsed.email || !parsed.userId) {
       clearAdminSession();
-      return null;
-    }
-    if (isJwtExpired(parsed.token)) {
-      expireAdminSession();
       return null;
     }
     return parsed;
@@ -96,10 +68,6 @@ export function loadAdminSession(): AdminSession | null {
     clearAdminSession();
     return null;
   }
-}
-
-export function getAdminToken() {
-  return loadAdminSession()?.token ?? null;
 }
 
 export function getOwnerDefaults() {

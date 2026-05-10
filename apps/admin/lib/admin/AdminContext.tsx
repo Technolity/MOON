@@ -58,6 +58,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    fetch('/api/backend/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     clearAdminSession();
     setSession(null);
   };

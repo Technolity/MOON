@@ -19,7 +19,12 @@ const env = {
     secret: process.env.REVALIDATE_SECRET || ''
   },
   auth: {
-    jwtSecret: process.env.JWT_SECRET || 'replace-this-before-production',
+    jwtSecret: process.env.JWT_SECRET || (() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const rand = require('crypto').randomBytes(32).toString('hex');
+      console.warn('[env] JWT_SECRET not set — using ephemeral random secret. Tokens will expire on server restart. Set JWT_SECRET before deploying.');
+      return rand;
+    })(),
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
   },
@@ -48,8 +53,6 @@ const env = {
 env.app.isProduction = env.app.nodeEnv === 'production';
 env.app.isDevelopment = env.app.nodeEnv === 'development';
 
-const INSECURE_JWT_DEFAULT = 'replace-this-before-production';
-
 function validateEnv() {
   const criticalErrors = [];
   const warnings = [];
@@ -57,9 +60,6 @@ function validateEnv() {
   if (env.app.isProduction) {
     if (!process.env.JWT_SECRET) {
       criticalErrors.push('JWT_SECRET must be set in production.');
-    }
-    if (env.auth.jwtSecret === INSECURE_JWT_DEFAULT) {
-      criticalErrors.push('JWT_SECRET must not be the default placeholder value.');
     }
     if (env.auth.jwtSecret && env.auth.jwtSecret.length < 32) {
       criticalErrors.push('JWT_SECRET must be at least 32 characters.');
@@ -79,9 +79,6 @@ function validateEnv() {
   }
 
   if (!env.app.isProduction) {
-    if (env.auth.jwtSecret === INSECURE_JWT_DEFAULT) {
-      warnings.push('JWT_SECRET is using the insecure default. Set a real secret before deploying.');
-    }
     if (!env.supabase.url || !env.supabase.serviceRoleKey) {
       warnings.push('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — database calls will fail.');
     }

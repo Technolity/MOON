@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { expireAdminSession, getAdminToken } from '@/lib/admin/adminAuth';
+import { expireAdminSession, loadAdminSession } from '@/lib/admin/adminAuth';
 
 interface ApiEnvelope<T> {
   success: boolean;
@@ -26,7 +26,6 @@ export interface BackendProduct {
 }
 
 export interface LoginResponse {
-  token: string;
   user: {
     id: string;
     email: string;
@@ -291,19 +290,13 @@ export interface DiscountWritePayload {
   isActive?: boolean;
 }
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api').replace(/\/+$/, '');
+const baseUrl = '/api/backend';
 
 const unwrap = <T>(response: ApiEnvelope<T>) => response.data;
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl,
-  prepareHeaders: (headers) => {
-    const token = getAdminToken();
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
+  credentials: 'include',
 });
 
 const adminBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
@@ -313,7 +306,7 @@ const adminBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryErr
 ) => {
   const url = typeof args === 'string' ? args : args.url;
   const isLoginRequest = url === '/auth/login';
-  if (!isLoginRequest && !getAdminToken()) {
+  if (!isLoginRequest && !loadAdminSession()) {
     return {
       error: {
         status: 401,

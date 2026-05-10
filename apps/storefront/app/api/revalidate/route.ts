@@ -2,7 +2,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get('secret');
+  const secret = request.headers.get('x-revalidate-secret');
   const path = request.nextUrl.searchParams.get('path');
   const tag = request.nextUrl.searchParams.get('tag');
 

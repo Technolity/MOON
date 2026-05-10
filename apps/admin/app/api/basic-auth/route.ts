@@ -15,8 +15,14 @@ function gateToken(user: string, pass: string) {
 export async function GET(req: NextRequest) {
   const user = process.env.ADMIN_BASIC_AUTH_USER ?? '';
   const pass = process.env.ADMIN_BASIC_AUTH_PASS ?? '';
-  const returnPath = req.nextUrl.searchParams.get('return') ?? '/dashboard-overview';
-  const returnUrl = new URL(returnPath, req.url);
+  const rawReturn = req.nextUrl.searchParams.get('return') ?? '/dashboard-overview';
+  const safePath =
+    rawReturn.startsWith('/') && !rawReturn.startsWith('//')
+      ? rawReturn
+      : '/dashboard-overview';
+  const returnUrl = new URL(req.url);
+  returnUrl.pathname = safePath;
+  returnUrl.search = '';
 
   if (!user || !pass || pass === 'change-me-in-production') {
     return Response.redirect(returnUrl, 302);

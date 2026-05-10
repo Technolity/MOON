@@ -7,13 +7,15 @@ async function revalidateStorefront(paths = [], tags = []) {
 
   const calls = [
     ...paths.map((path) =>
-      fetch(`${base}/api/revalidate?secret=${encodeURIComponent(secret)}&path=${encodeURIComponent(path)}`, {
+      fetch(`${base}/api/revalidate?path=${encodeURIComponent(path)}`, {
         method: 'POST',
+        headers: { 'x-revalidate-secret': secret },
       })
     ),
     ...tags.map((tag) =>
-      fetch(`${base}/api/revalidate?secret=${encodeURIComponent(secret)}&tag=${encodeURIComponent(tag)}`, {
+      fetch(`${base}/api/revalidate?tag=${encodeURIComponent(tag)}`, {
         method: 'POST',
+        headers: { 'x-revalidate-secret': secret },
       })
     ),
   ];
