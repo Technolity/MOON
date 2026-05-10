@@ -39,6 +39,7 @@ function emptyForm(): DiscountWritePayload {
     startsAt: null,
     endsAt: null,
     isActive: true,
+    freeShipping: false,
   };
 }
 
@@ -53,6 +54,7 @@ function formFromDiscount(discount: DiscountCode): DiscountWritePayload {
     startsAt: discount.starts_at,
     endsAt: discount.ends_at,
     isActive: discount.is_active,
+    freeShipping: discount.free_shipping ?? false,
   };
 }
 
@@ -190,6 +192,11 @@ export default function DiscountsPage() {
               <span style={{ fontSize: 13, color: 'var(--ink)' }}>Active at checkout</span>
             </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Toggle checked={Boolean(form.freeShipping)} onChange={(value) => updateForm('freeShipping', value)} />
+              <span style={{ fontSize: 13, color: 'var(--ink)' }}>Free shipping (waives shipping charges)</span>
+            </div>
+
             <div style={{ display: 'flex', gap: 10 }}>
               <Btn type="submit" disabled={isBusy} icon="sell">{isBusy ? 'Saving...' : editingId ? 'Update code' : 'Create code'}</Btn>
               {editingId ? <Btn variant="secondary" onClick={resetForm}>Cancel</Btn> : null}
@@ -230,6 +237,7 @@ export default function DiscountsPage() {
                       {valueLabel}
                       {Number(discount.minimum_subtotal) > 0 ? ` · min ${currency(Number(discount.minimum_subtotal))}` : ''}
                       {discount.max_discount != null ? ` · cap ${currency(Number(discount.max_discount))}` : ''}
+                      {discount.free_shipping ? ' · Free shipping' : ''}
                     </div>
                     <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink-3)' }}>
                       Used {discount.usage_count}{discount.usage_limit ? ` / ${discount.usage_limit}` : ''}

@@ -22,7 +22,15 @@ const listZones = asyncHandler(async (req, res) => {
   });
 });
 
+const updateZone = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { cost, estimatedDays } = req.body;
+  const result = await shippingService.updateZone(id, { cost, estimatedDays });
+  return sendResponse(res, { message: 'Shipping zone updated.', data: result });
+});
+
 module.exports = {
   calculateShipping,
-  listZones
+  listZones,
+  updateZone
 };

@@ -9,7 +9,7 @@ async function listZones() {
 
 async function calculateShipping({ state, orderSubtotal = 0 }) {
   if (orderSubtotal >= FREE_SHIPPING_THRESHOLD) {
-    return { cost: 0, estimatedDays: null, zoneName: 'Free Shipping', isFree: true };
+    return { cost: 0, eta: 'Free', zone: 'Free Shipping', isFree: true };
   }
 
   const zone = await shippingRepository.findZoneByState(state);
@@ -19,10 +19,14 @@ async function calculateShipping({ state, orderSubtotal = 0 }) {
 
   return {
     cost: Number(zone.cost),
-    estimatedDays: zone.estimated_days,
-    zoneName: zone.zone_name,
+    eta: zone.estimated_days ? `${zone.estimated_days}–${zone.estimated_days + 2} days` : '3–7 days',
+    zone: zone.zone_name,
     isFree: false
   };
 }
 
-module.exports = { calculateShipping, listZones };
+async function updateZone(id, { cost, estimatedDays }) {
+  return shippingRepository.updateZone(id, { cost, estimatedDays });
+}
+
+module.exports = { calculateShipping, listZones, updateZone };

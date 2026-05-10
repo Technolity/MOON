@@ -23,9 +23,10 @@ async function listProducts({ category, theme, limit = 50 } = {}) {
 
   return enrichWithFallbackImages((data ?? []).map(p => {
     const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
-    const inStock = inv ? (inv.quantity - inv.reserved > 0) : true;
+    const available = inv ? (inv.quantity - inv.reserved) : null;
+    const inStock = available === null ? true : available > 0;
     delete p.inventory;
-    return { ...p, inStock };
+    return { ...p, inStock, stockCount: available ?? undefined };
   }));
 }
 
@@ -64,9 +65,10 @@ async function searchProducts({ q, limit = 20 } = {}) {
 
   return enrichWithFallbackImages((data ?? []).map(p => {
     const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
-    const inStock = inv ? (inv.quantity - inv.reserved > 0) : true;
+    const available = inv ? (inv.quantity - inv.reserved) : null;
+    const inStock = available === null ? true : available > 0;
     delete p.inventory;
-    return { ...p, inStock };
+    return { ...p, inStock, stockCount: available ?? undefined };
   }));
 }
 

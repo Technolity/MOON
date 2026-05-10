@@ -16,6 +16,11 @@ import {
   saveAdminSettings,
   type AdminSettings,
 } from '@/lib/admin/adminSettings';
+import {
+  useGetShippingZonesQuery,
+  useUpdateShippingZoneMutation,
+  type ShippingZone,
+} from '@/lib/store/services/admin-api';
 
 type SectionId = 'store' | 'shipping' | 'taxes' | 'payments' | 'notifications' | 'appearance';
 
@@ -32,6 +37,14 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SectionId>('store');
   const [settings, setSettings] = useState<AdminSettings>(DEFAULT_ADMIN_SETTINGS);
   const [saved, setSaved] = useState(false);
+
+  const { data: shippingZones = [] } = useGetShippingZonesQuery();
+  const [updateShippingZone] = useUpdateShippingZoneMutation();
+  const [zoneEdits, setZoneEdits] = useState<Record<string, { cost: string; estimatedDays: string }>>({});
+
+  const getZoneEdit = (zone: ShippingZone) => {
+    return zoneEdits[zone.id] ?? { cost: String(zone.cost), estimatedDays: String(zone.estimated_days) };
+  };
 
   useEffect(() => {
     setSettings(readAdminSettings());
@@ -122,9 +135,50 @@ export default function SettingsPage() {
           ) : null}
 
           {activeSection === 'shipping' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Default shipping cost"><MoonInput type="number" min={0} value={settings.defaultShippingCost} onChange={(event) => setValue('defaultShippingCost', Number(event.target.value))} /></Field>
-              <Field label="Free shipping threshold"><MoonInput type="number" min={0} value={settings.freeShippingThreshold} onChange={(event) => setValue('freeShippingThreshold', Number(event.target.value))} /></Field>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.5 }}>
+                These are your live shipping zones. Changes are saved directly to the database.
+              </div>
+              {shippingZones.length === 0 ? (
+                <p style={{ color: 'var(--ink-2)', fontSize: 13 }}>No shipping zones found.</p>
+              ) : (
+                shippingZones.map((zone) => {
+                  const edit = getZoneEdit(zone);
+                  return (
+                    <div key={zone.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink)' }}>{zone.zone_name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{zone.states.join(', ')}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+                        <Field label="Cost (₹)">
+                          <MoonInput
+                            type="number"
+                            min={0}
+                            value={edit.cost}
+                            onChange={(e) => setZoneEdits((prev) => ({ ...prev, [zone.id]: { ...getZoneEdit(zone), cost: e.target.value } }))}
+                          />
+                        </Field>
+                        <Field label="Estimated days">
+                          <MoonInput
+                            type="number"
+                            min={1}
+                            value={edit.estimatedDays}
+                            onChange={(e) => setZoneEdits((prev) => ({ ...prev, [zone.id]: { ...getZoneEdit(zone), estimatedDays: e.target.value } }))}
+                          />
+                        </Field>
+                        <Btn
+                          variant="primary"
+                          onClick={async () => {
+                            await updateShippingZone({ id: zone.id, patch: { cost: Number(edit.cost), estimatedDays: Number(edit.estimatedDays) } });
+                            setZoneEdits((prev) => { const next = { ...prev }; delete next[zone.id]; return next; });
+                          }}
+                        >
+                          Save
+                        </Btn>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           ) : null}
 

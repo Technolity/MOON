@@ -25,4 +25,20 @@ async function findZoneByState(state) {
   return data?.[0] ?? null;
 }
 
-module.exports = { findZoneByState, listZones };
+async function updateZone(id, { cost, estimatedDays }) {
+  const db = getSupabaseAdminClient();
+  const patch = {};
+  if (cost !== undefined) patch.cost = Number(cost);
+  if (estimatedDays !== undefined) patch.estimated_days = Number(estimatedDays);
+  const { data, error } = await db
+    .from('shipping_zones')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id, zone_name, states, cost, estimated_days, is_active')
+    .single();
+  if (error) throw new ApiError(500, error.message);
+  if (!data) throw new ApiError(404, 'Shipping zone not found.');
+  return data;
+}
+
+module.exports = { findZoneByState, listZones, updateZone };

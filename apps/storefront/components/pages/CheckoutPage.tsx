@@ -100,9 +100,15 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
     () => Math.max(0, subtotal - discountAmount),
     [discountAmount, subtotal]
   );
+  const effectiveShippingCost = useMemo(() => {
+    if (!items.length) return 0;
+    if (appliedDiscount?.freeShipping) return 0;
+    return shipping.cost;
+  }, [appliedDiscount, items.length, shipping.cost]);
+
   const total = useMemo(
-    () => discountedSubtotal + (items.length ? shipping.cost : 0),
-    [discountedSubtotal, shipping.cost, items.length]
+    () => discountedSubtotal + effectiveShippingCost,
+    [discountedSubtotal, effectiveShippingCost]
   );
 
   useEffect(() => {
@@ -406,7 +412,7 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
               </div>
               <div className="summary-item">
                 <span>Shipping (<span id="checkout-zone">{shipping.zone}</span>)</span>
-                <span id="checkout-shipping">₹{items.length ? shipping.cost : 0}</span>
+                <span id="checkout-shipping">{appliedDiscount?.freeShipping ? 'Free' : `₹${items.length ? shipping.cost : 0}`}</span>
               </div>
               <div className="summary-item">
                 <span>ETA</span>

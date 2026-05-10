@@ -19,6 +19,7 @@ export interface BackendProduct {
   theme?: string | null;
   in_stock?: boolean | null;
   inStock?: boolean;
+  stockCount?: number | null;
   inventory?: { quantity: number; reserved: number; sku: string } | null;
 }
 
@@ -133,6 +134,7 @@ export interface ValidatedDiscount {
   subtotal: number;
   discountedSubtotal: number;
   shippingCost: number;
+  freeShipping: boolean;
   totalAfterDiscount: number;
   message: string;
 }

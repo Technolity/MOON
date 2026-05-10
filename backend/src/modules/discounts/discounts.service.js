@@ -43,11 +43,11 @@ function calculateDiscount(discount, subtotal) {
 async function validateDiscount({ code, subtotal, shippingCost = 0 }) {
   const normalizedCode = repo.normalizeCode(code);
   const baseSubtotal = money(subtotal);
-  const shipping = money(shippingCost);
   const discount = await repo.findDiscountByCode(normalizedCode);
 
   assertUsable(discount, baseSubtotal);
 
+  const effectiveShipping = discount.free_shipping ? 0 : money(shippingCost);
   const discountAmount = calculateDiscount(discount, baseSubtotal);
   const discountedSubtotal = money(baseSubtotal - discountAmount);
 
@@ -59,9 +59,10 @@ async function validateDiscount({ code, subtotal, shippingCost = 0 }) {
     discountAmount,
     subtotal: baseSubtotal,
     discountedSubtotal,
-    shippingCost: shipping,
-    totalAfterDiscount: money(discountedSubtotal + shipping),
-    message: 'Discount applied.'
+    shippingCost: effectiveShipping,
+    freeShipping: Boolean(discount.free_shipping),
+    totalAfterDiscount: money(discountedSubtotal + effectiveShipping),
+    message: discount.free_shipping ? 'Discount applied — free shipping included!' : 'Discount applied.'
   };
 }
 

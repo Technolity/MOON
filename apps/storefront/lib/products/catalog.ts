@@ -62,6 +62,12 @@ function stockState(product: BackendProduct) {
   return true;
 }
 
+function availableStock(product: BackendProduct): number | undefined {
+  if (product.stockCount != null) return Math.max(0, product.stockCount);
+  if (product.inventory) return Math.max(0, product.inventory.quantity - product.inventory.reserved);
+  return undefined;
+}
+
 export function inferProductKey(product: BackendProduct): ProductKey | null {
   if (product.slug && productKeyBySlug[product.slug]) return productKeyBySlug[product.slug];
   const normalizedName = product.name.trim().toLowerCase();
@@ -87,6 +93,7 @@ function mapProduct(product: BackendProduct, key: ProductKey | null): CatalogIte
     featured: fallback?.featured,
     productKey: key ?? undefined,
     inStock: stockState(product),
+    stockCount: availableStock(product),
   };
 }
 

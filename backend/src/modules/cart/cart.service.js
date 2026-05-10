@@ -23,13 +23,28 @@ async function addItem({ user, input, sessionId }) {
   const product = await findProductById(productId);
   if (!product) throw new ApiError(404, 'Product not found.');
 
+  const inv = Array.isArray(product.inventory) ? product.inventory[0] : product.inventory;
+  const availableQty = (inv && inv.quantity != null && inv.reserved != null)
+    ? inv.quantity - inv.reserved
+    : null;
+
+  if (availableQty !== null && availableQty <= 0) {
+    throw new ApiError(400, 'Product is out of stock.');
+  }
+
   const cart = await cartRepository.getCart(key);
   const items = cart ? [...cart.items] : [];
 
   const existing = items.find(i => i.productId === productId);
   if (existing) {
-    existing.quantity = Math.min(existing.quantity + quantity, 99);
+    if (availableQty !== null && existing.quantity + quantity > availableQty) {
+      throw new ApiError(400, `Only ${availableQty} unit(s) available in stock.`);
+    }
+    existing.quantity = existing.quantity + quantity;
   } else {
+    if (availableQty !== null && quantity > availableQty) {
+      throw new ApiError(400, `Only ${availableQty} unit(s) available in stock.`);
+    }
     items.push({
       itemId: randomUUID(),
       productId,
@@ -49,6 +64,20 @@ async function updateItem({ user, params, input, sessionId }) {
 
   const cart = await cartRepository.getCart(key);
   if (!cart) throw new ApiError(404, 'Cart not found.');
+
+  const cartItem = cart.items.find(i => i.itemId === params.itemId);
+  if (!cartItem) throw new ApiError(404, 'Cart item not found.');
+
+  const product = await findProductById(cartItem.productId);
+  if (product) {
+    const inv = Array.isArray(product.inventory) ? product.inventory[0] : product.inventory;
+    const availableQty = (inv && inv.quantity != null && inv.reserved != null)
+      ? inv.quantity - inv.reserved
+      : null;
+    if (availableQty !== null && input.quantity > availableQty) {
+      throw new ApiError(400, `Only ${availableQty} unit(s) available in stock.`);
+    }
+  }
 
   const items = cart.items.map(i =>
     i.itemId === params.itemId ? { ...i, quantity: input.quantity } : i

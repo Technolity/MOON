@@ -40,6 +40,7 @@ export interface CatalogItem {
   featured?: boolean;
   productKey?: ProductKey;
   inStock?: boolean;
+  stockCount?: number;
 }
 
 export interface CartItem {

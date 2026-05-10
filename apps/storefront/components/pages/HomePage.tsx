@@ -500,6 +500,14 @@ export function HomePage({
                         fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
                         letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 600,
                       }}>Out of Stock</span>
+                    ) : (item.stockCount != null && item.stockCount < 10) ? (
+                      <span style={{
+                        position: 'absolute', left: 12, top: 12, zIndex: 3,
+                        background: 'rgba(180,90,0,0.85)', color: '#fff',
+                        padding: '4px 10px',
+                        fontFamily: 'var(--font-mark)', fontSize: '0.5625rem',
+                        letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 600,
+                      }}>Only {item.stockCount} left</span>
                     ) : item.featured && (
                       <span style={{
                         position: 'absolute', left: 12, top: 12, zIndex: 3,
@@ -524,6 +532,14 @@ export function HomePage({
                       color: 'var(--fg, #1F1814)', margin: 0,
                     }}>{item.title}</h3>
                     <span style={{ fontSize: 11, color: ct.starColor, marginTop: 4, letterSpacing: 2 }}>★★★★★</span>
+                    {item.inStock !== false && item.stockCount != null && item.stockCount < 10 && (
+                      <span style={{
+                        fontSize: '0.625rem', color: '#B45A00', fontFamily: 'var(--font-body, Manrope, sans-serif)',
+                        fontWeight: 600, marginTop: 2,
+                      }}>
+                        {item.stockCount === 1 ? 'Only 1 left in stock' : `Only ${item.stockCount} left in stock`}
+                      </span>
+                    )}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
                       <span style={{
                         fontFamily: 'var(--font-serif, Fraunces, serif)',

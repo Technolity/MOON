@@ -18,6 +18,7 @@ const productsRoutes = require('./products/products.routes');
 const productsAdminRoutes = require('./products/products.admin.routes');
 const productsUploadRoutes = require('./products/products.upload.routes');
 const shippingRoutes = require('./shipping/shipping.routes');
+const shippingAdminRoutes = require('./shipping/shipping.admin.routes');
 const newsletterRoutes = require('./newsletter/newsletter.routes');
 const cronRoutes = require('./cron/cron.routes');
 
@@ -31,6 +32,7 @@ router.use('/discounts', discountsRoutes);
 router.use('/orders', ordersRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/shipping', shippingRoutes);
+router.use('/admin/shipping/zones', shippingAdminRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/admin/analytics', analyticsRoutes);

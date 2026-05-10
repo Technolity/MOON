@@ -98,6 +98,8 @@ export function ProductDetailModal({ item, onClose, onAddToCart }: ProductDetail
     : 0;
 
   const isOutOfStock = item.inStock === false;
+  const lowStockThreshold = 10;
+  const isLowStock = !isOutOfStock && item.stockCount != null && item.stockCount < lowStockThreshold;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -328,6 +330,33 @@ export function ProductDetailModal({ item, onClose, onAddToCart }: ProductDetail
             )}
 
             <div style={{ borderTop: '1px solid var(--hairline, rgba(11,8,6,0.12))' }} />
+
+            {/* Stock badge */}
+            {isOutOfStock ? (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(180,30,30,0.08)',
+                border: '1px solid rgba(180,30,30,0.22)',
+                padding: '6px 14px',
+                fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                fontSize: '0.5rem', letterSpacing: '0.18em',
+                textTransform: 'uppercase', color: '#B41E1E',
+              }}>
+                ✗ Out of Stock
+              </div>
+            ) : isLowStock ? (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(194,110,0,0.08)',
+                border: '1px solid rgba(194,110,0,0.28)',
+                padding: '6px 14px',
+                fontFamily: 'var(--font-mark, Syncopate, sans-serif)',
+                fontSize: '0.5rem', letterSpacing: '0.18em',
+                textTransform: 'uppercase', color: '#C26E00',
+              }}>
+                ⚠ {item.stockCount === 1 ? 'Only 1 left in stock' : `Only ${item.stockCount} left in stock`}
+              </div>
+            ) : null}
 
             {/* Price + Add to cart */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>

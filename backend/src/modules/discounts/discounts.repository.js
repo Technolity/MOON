@@ -50,6 +50,7 @@ function localRowFromInput(fields, existing = {}) {
     starts_at: 'startsAt' in fields ? fields.startsAt : (existing.starts_at ?? null),
     ends_at: 'endsAt' in fields ? fields.endsAt : (existing.ends_at ?? null),
     is_active: 'isActive' in fields ? fields.isActive : (existing.is_active ?? true),
+    free_shipping: 'freeShipping' in fields ? Boolean(fields.freeShipping) : (existing.free_shipping ?? false),
     created_at: existing.created_at || now,
     updated_at: now
   };
@@ -111,6 +112,7 @@ function mapInput(fields) {
   if ('startsAt' in fields) mapped.starts_at = fields.startsAt;
   if ('endsAt' in fields) mapped.ends_at = fields.endsAt;
   if ('isActive' in fields) mapped.is_active = fields.isActive;
+  if ('freeShipping' in fields) mapped.free_shipping = Boolean(fields.freeShipping);
   return mapped;
 }
 

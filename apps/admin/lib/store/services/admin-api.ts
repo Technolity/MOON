@@ -274,6 +274,7 @@ export interface DiscountCode {
   starts_at: string | null;
   ends_at: string | null;
   is_active: boolean;
+  free_shipping: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -288,6 +289,21 @@ export interface DiscountWritePayload {
   startsAt?: string | null;
   endsAt?: string | null;
   isActive?: boolean;
+  freeShipping?: boolean;
+}
+
+export interface ShippingZone {
+  id: string;
+  zone_name: string;
+  states: string[];
+  cost: number;
+  estimated_days: number;
+  is_active: boolean;
+}
+
+export interface UpdateShippingZonePayload {
+  cost?: number;
+  estimatedDays?: number;
 }
 
 const baseUrl = '/api/backend';
@@ -325,7 +341,7 @@ const adminBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryErr
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: adminBaseQuery,
-  tagTypes: ['Inventory', 'Analytics', 'AdminSession', 'AdminProducts', 'AdminOrders', 'AdminCustomers', 'AdminCategories', 'AdminDiscounts', 'DetailedAnalytics'],
+  tagTypes: ['Inventory', 'Analytics', 'AdminSession', 'AdminProducts', 'AdminOrders', 'AdminCustomers', 'AdminCategories', 'AdminDiscounts', 'DetailedAnalytics', 'ShippingZones'],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, { email: string; password: string }>({
       query: (body) => ({
@@ -557,6 +573,22 @@ export const adminApi = createApi({
       transformResponse: unwrap,
       providesTags: ['DetailedAnalytics'],
     }),
+
+    getShippingZones: builder.query<ShippingZone[], void>({
+      query: () => '/admin/shipping/zones',
+      transformResponse: unwrap,
+      providesTags: ['ShippingZones' as never],
+    }),
+
+    updateShippingZone: builder.mutation<ShippingZone, { id: string; patch: UpdateShippingZonePayload }>({
+      query: ({ id, patch }) => ({
+        url: `/admin/shipping/zones/${id}`,
+        method: 'PUT',
+        body: patch,
+      }),
+      transformResponse: unwrap,
+      invalidatesTags: ['ShippingZones' as never],
+    }),
   }),
 });
 
@@ -590,4 +622,6 @@ export const {
   useGetProductBuyersQuery,
   useGetAnalyticsTimelineQuery,
   useGetGeoBreakdownQuery,
+  useGetShippingZonesQuery,
+  useUpdateShippingZoneMutation,
 } = adminApi;
