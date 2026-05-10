@@ -185,6 +185,7 @@ export function CheckoutPage({ items, subtotal, onBackToCart, onOrderPlaced }: C
         },
         paymentMethod: paymentMethodMap[paymentMethod] ?? 'upi',
         notes: String(formData.get('notes') ?? '').trim() || undefined,
+        discountCode: appliedDiscount?.code || undefined,
       }).unwrap();
 
       const orderId = createdOrder.id;

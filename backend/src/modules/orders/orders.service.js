@@ -1,6 +1,7 @@
 const ApiError = require('../../core/errors/api-error');
 const { findProductsByIds } = require('../products/products.repository');
 const { calculateShipping } = require('../shipping/shipping.service');
+const { validateDiscount } = require('../discounts/discounts.service');
 const ordersRepository = require('./orders.repository');
 const { sendOrderConfirmation, sendAdminOrderAlert } = require('../notifications/notifications.service');
 
@@ -17,7 +18,8 @@ async function createOrder({ user, input }) {
     items: requestedItems,
     shippingAddress,
     billingAddress,
-    notes
+    notes,
+    discountCode
   } = input;
 
   // 1. Load products from DB — never trust client prices
@@ -51,9 +53,22 @@ async function createOrder({ user, input }) {
     orderSubtotal: subtotal
   });
   const shippingCost = shipping.cost;
-  const total = subtotal + shippingCost;
 
-  // 4. Persist addresses
+  // 4. Apply discount if provided (re-validate server-side — never trust client amounts)
+  let discountAmount = 0;
+  let effectiveShipping = shippingCost;
+  if (discountCode) {
+    try {
+      const discount = await validateDiscount({ code: discountCode, subtotal, shippingCost });
+      discountAmount = discount.discountAmount;
+      effectiveShipping = discount.shippingCost;
+    } catch {
+      // Invalid/expired discount — proceed with full price
+    }
+  }
+  const total = Math.max(0, subtotal - discountAmount) + effectiveShipping;
+
+  // 5. Persist addresses
   const userId = user?.sub || null;
   const shippingAddressId = await ordersRepository.createAddress({
     ...shippingAddress,
@@ -63,12 +78,12 @@ async function createOrder({ user, input }) {
     ? await ordersRepository.createAddress({ ...billingAddress, userId })
     : shippingAddressId;
 
-  // 5. Create order + items
+  // 6. Create order + items
   const order = await ordersRepository.createOrder({
     userId,
     orderNumber: generateOrderNumber(),
     subtotal,
-    shippingCost,
+    shippingCost: effectiveShipping,
     total,
     shippingAddressId,
     billingAddressId,
@@ -78,16 +93,16 @@ async function createOrder({ user, input }) {
     items: lineItems
   });
 
-  // 6. Reserve inventory (best-effort)
+  // 7. Reserve inventory (best-effort)
   await ordersRepository.reserveInventory(lineItems);
 
-  // 7. Fire-and-forget emails — never block order creation on email delivery
+  // 8. Fire-and-forget emails — never block order creation on email delivery
   Promise.allSettled([
     sendAdminOrderAlert({ order, items: lineItems, customerEmail, customerPhone, shippingAddress, total }),
     sendOrderConfirmation({ to: customerEmail, orderNumber: order.order_number, total, items: lineItems })
   ]).catch(() => {});
 
-  return { ...order, items: lineItems, shippingCost, subtotal, total };
+  return { ...order, items: lineItems, shippingCost: effectiveShipping, subtotal, total };
 }
 
 async function getOrderById({ user, params }) {

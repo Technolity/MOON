@@ -63,6 +63,7 @@ export interface CreateOrderPayload {
   };
   paymentMethod?: 'upi' | 'card' | 'netbanking' | 'wallet';
   notes?: string;
+  discountCode?: string;
 }
 
 export interface CreatedOrder {

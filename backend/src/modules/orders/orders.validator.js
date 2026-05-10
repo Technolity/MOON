@@ -27,7 +27,8 @@ const createOrderSchema = z.object({
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
   paymentMethod: z.enum(['upi', 'card', 'netbanking', 'wallet']).optional(),
-  notes: z.string().trim().max(1000).optional()
+  notes: z.string().trim().max(1000).optional(),
+  discountCode: z.string().trim().max(40).optional()
 });
 
 const orderParamsSchema = z.object({
