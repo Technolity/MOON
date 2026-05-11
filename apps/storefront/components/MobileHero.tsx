@@ -176,7 +176,7 @@ function EffectLayer({ slide, active }: { slide: MobileHeroSlide; active: boolea
   if (slide.effect === 'smoke') {
     return (
       <div className="mobile-hero__effects" data-active={active}>
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 1].map((i) => (
           <span
             key={i}
             className="mobile-hero__smoke-wisp"
@@ -188,7 +188,7 @@ function EffectLayer({ slide, active }: { slide: MobileHeroSlide; active: boolea
             }}
           />
         ))}
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+        {[0, 1, 2, 3].map((i) => (
           <span
             key={`dust-${i}`}
             className="mobile-hero__rock-dust"
@@ -206,7 +206,7 @@ function EffectLayer({ slide, active }: { slide: MobileHeroSlide; active: boolea
   if (slide.effect === 'saffron') {
     return (
       <div className="mobile-hero__effects" data-active={active}>
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2].map((i) => (
           <span
             key={i}
             className="mobile-hero__red-droplet"
@@ -226,7 +226,7 @@ function EffectLayer({ slide, active }: { slide: MobileHeroSlide; active: boolea
 
   return (
     <div className="mobile-hero__effects" data-active={active}>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2].map((i) => (
         <span
           key={i}
           className="mobile-hero__honey-drop"
@@ -316,7 +316,7 @@ function MobileHeroFrame({ slide, active }: { slide: MobileHeroSlide; active: bo
   return (
     <div className="mobile-hero__slide" data-active={active} data-slide={slide.shortId}>
       <div className="mobile-hero__artboard">
-        <img className="mobile-hero__background" src={slide.background} alt="" aria-hidden="true" />
+        <img className="mobile-hero__background" src={slide.background} alt="" aria-hidden="true" loading="eager" decoding="async" />
         <div className="mobile-hero__scrim" />
         <Headline slide={slide} active={active} />
         <EffectLayer slide={slide} active={active} />
@@ -329,8 +329,9 @@ function MobileHeroFrame({ slide, active }: { slide: MobileHeroSlide; active: bo
             width: px(slide.productStyle.width, 390),
             left: px(slide.productStyle.left, 390),
             top: px(slide.productStyle.top, 780),
-            filter: `drop-shadow(0 25px 28px rgba(0,0,0,0.58)) drop-shadow(0 0 24px ${slide.accent}33)`,
           }}
+          loading="eager"
+          decoding="async"
         />
       </div>
     </div>
@@ -354,6 +355,7 @@ function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
 
 export function MobileHero({ activeIndex, onSlideChange, onShop }: MobileHeroProps) {
   const slide = MOBILE_HERO_SLIDES[activeIndex] ?? MOBILE_HERO_SLIDES[0];
+  const nextSlide = MOBILE_HERO_SLIDES[(activeIndex + 1) % MOBILE_HERO_SLIDES.length];
   const goPrev = () => onSlideChange((activeIndex - 1 + MOBILE_HERO_SLIDES.length) % MOBILE_HERO_SLIDES.length);
   const goNext = () => onSlideChange((activeIndex + 1) % MOBILE_HERO_SLIDES.length);
 
@@ -372,24 +374,9 @@ export function MobileHero({ activeIndex, onSlideChange, onShop }: MobileHeroPro
       data-theme={slide.shortId}
       style={{ '--mobile-hero-accent': slide.accent, '--mobile-hero-warm': slide.warm, backgroundColor: slide.bg } as CSSProperties}
     >
-      <svg width="0" height="0" aria-hidden="true" focusable="false" className="mobile-hero__filters">
-        <filter id="mobile-roughen-text">
-          <feTurbulence type="fractalNoise" baseFrequency="0.035 0.11" numOctaves="2" seed="11" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.1" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-        <filter id="mobile-erode-text">
-          <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="1" seed="7" result="noise" />
-          <feColorMatrix in="noise" type="saturate" values="0" result="mono" />
-          <feComponentTransfer in="mono" result="hard">
-            <feFuncA type="table" tableValues="0 0.85" />
-          </feComponentTransfer>
-          <feComposite in="SourceGraphic" in2="hard" operator="in" />
-        </filter>
-      </svg>
-
-      {MOBILE_HERO_SLIDES.map((s, i) => (
-        <MobileHeroFrame key={s.id} slide={s} active={i === activeIndex} />
-      ))}
+      <MobileHeroFrame key={slide.id} slide={slide} active />
+      <img className="mobile-hero__preload" src={nextSlide.background} alt="" aria-hidden="true" loading="eager" decoding="async" />
+      <img className="mobile-hero__preload" src={nextSlide.product} alt="" aria-hidden="true" loading="eager" decoding="async" />
 
       <div className="mobile-hero__progress" aria-hidden="true">
         {MOBILE_HERO_SLIDES.map((s, i) => (
