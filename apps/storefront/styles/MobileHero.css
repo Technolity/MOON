@@ -1,3 +1,4 @@
+/* ─── Mobile Hero ─────────────────────────────────────────── */
 .mobile-hero {
   position: relative;
   display: none;
@@ -15,7 +16,7 @@
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 900ms cubic-bezier(.6,.02,.2,1);
+  transition: opacity 900ms cubic-bezier(.55,.02,.18,1);
 }
 
 .mobile-hero__slide[data-active="true"] {
@@ -31,11 +32,13 @@
   width: max(100vw, 50svh);
   height: calc(max(100vw, 50svh) * 2);
   transform: translate(-50%, -50%);
-  transform-origin: 50% 50%;
   overflow: hidden;
   container-type: inline-size;
+  /* Scope reflow/paint to this subtree */
+  contain: layout style paint;
 }
 
+/* ─── Background ──────────────────────────────────────────── */
 .mobile-hero__background {
   position: absolute;
   inset: 0;
@@ -43,60 +46,150 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 50%;
-  transform: scale(1);
+  object-position: 50% 40%;
+  transform: scale(1) translateZ(0);
+  will-change: transform;
 }
 
 .mobile-hero__slide[data-active="true"] .mobile-hero__background {
-  transform: scale(1.012);
+  transform: scale(1.022) translateZ(0);
+  transition: transform 10000ms cubic-bezier(0.22,1,0.36,1);
 }
 
+/* ─── Scrim / cinematic vignette ──────────────────────────── */
 .mobile-hero__scrim {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background:
-    linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.08) 28%, transparent 48%),
-    linear-gradient(to top, rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.18) 18%, transparent 40%);
   pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 0%,   rgba(0,0,0,0.65) 0%, transparent 52%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.80) 0%, transparent 48%),
+    radial-gradient(ellipse at 0%  50%,  rgba(0,0,0,0.36) 0%, transparent 42%),
+    radial-gradient(ellipse at 100% 50%, rgba(0,0,0,0.32) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 30%, transparent 65%, rgba(0,0,0,0.48) 100%);
 }
 
+/* ─── Film grain — pre-rendered static SVG, moved via GPU transform ─ */
+/*
+ * No animated SVG seed (CPU-heavy). Instead: one static feTurbulence baked
+ * into a background-image data URI, then position-shifted via CSS transform
+ * with steps(4). The browser rasterises the SVG once; GPU composites it.
+ */
+.mobile-hero__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.22;
+  overflow: hidden;
+}
+
+.mobile-hero__grain::after {
+  content: '';
+  position: absolute;
+  /* Oversized to absorb translation offsets without revealing edge */
+  inset: -100px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  will-change: transform;
+  animation: mobileGrainFlicker 0.14s steps(1) infinite;
+}
+
+@keyframes mobileGrainFlicker {
+  0%   { transform: translate3d(0,     0,   0); }
+  25%  { transform: translate3d(-76px,-54px, 0); }
+  50%  { transform: translate3d( 62px, 28px, 0); }
+  75%  { transform: translate3d(-32px, 78px, 0); }
+}
+
+/* ─── Headline — z-6: INSIDE scene, behind product ───────── */
+/*
+ * Font size set via JS as (size/390)*100 cqw.
+ * Widest line per slide is sized to fit ≤90% of container width.
+ * No overflow: artboard overflow:hidden clips any edge case.
+ */
 .mobile-hero__headline {
   position: absolute;
   z-index: 6;
   margin: 0;
-  transform-origin: 50% 50%;
-  font-family: var(--font-mobile-hero, var(--font-headline, Impact, sans-serif));
-  font-weight: 700;
-  letter-spacing: 0;
+  padding: 0;
+  font-family: var(--font-mobile-hero, 'Bebas Neue', Impact, sans-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
-  text-align: center;
-  text-shadow: 0 18px 38px rgba(0,0,0,0.42);
+  text-align: left;
   pointer-events: none;
-  mix-blend-mode: normal;
+  /* will-change only on animated elements — GSAP uses x/y via transform */
+  will-change: transform;
 }
 
 .mobile-hero__headline-mask {
   display: block;
-  overflow: hidden;
+  overflow: visible;
   padding: 0.01em 0 0.04em;
   white-space: nowrap;
 }
 
+/* ─── Distressed type ─────────────────────────────────────── */
+/*
+ * filter: url() is static — browser rasterises it once and promotes this
+ * element to its own compositing layer (via will-change below), so GSAP's
+ * transform/opacity animation never triggers re-rasterisation.
+ */
 .mobile-hero__distressed-type {
   position: relative;
   display: block;
-  color: var(--headline-color);
   isolation: isolate;
   white-space: nowrap;
-  font-size: clamp(36px, 1em, 80px);
-  text-shadow:
-    1px 1px 0 rgba(255,235,175,0.12),
-    -1px -1px 0 rgba(0,0,0,0.28),
-    0 10px 24px rgba(0,0,0,0.24);
+  font-weight: 400;
+  filter: url(#mh-concrete-texture);
+  /* GPU layer — GSAP animates opacity + y + scale only, no filter changes */
+  will-change: transform, opacity;
 }
 
-.mobile-hero__distressed-type::before,
+/* Muted cinematic gradient fill */
+.mobile-hero__distressed-type {
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-image:
+    linear-gradient(162deg,
+      rgba(255,255,255,0.22) 0%,
+      rgba(255,255,255,0.05) 18%,
+      rgba(0,0,0,0.0) 42%,
+      rgba(0,0,0,0.26) 100%
+    ),
+    linear-gradient(var(--headline-color), var(--headline-color));
+  text-shadow: none;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Misregistered offset ghost layer — manual double-print effect */
+.mobile-hero__distressed-type::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-image: linear-gradient(var(--headline-color), var(--headline-color));
+  transform: translate(-2px, -1.6px);
+  opacity: 0.14;
+  mix-blend-mode: screen;
+  -webkit-text-fill-color: transparent;
+  filter: url(#mh-concrete-texture);
+}
+
+/* Surface light/shadow variation */
 .mobile-hero__distressed-type::after {
   content: attr(data-text);
   position: absolute;
@@ -107,195 +200,219 @@
   line-height: inherit;
   text-align: inherit;
   text-transform: inherit;
-}
-
-.mobile-hero__distressed-type::before {
-  color: rgba(255,226,161,0.18);
-  transform: translate(-1.4px, -1.3px);
-  text-shadow:
-    2px 2px 0 rgba(0,0,0,0.24),
-    -1px -1px 0 rgba(255,236,189,0.1);
-  opacity: 0.62;
-  mix-blend-mode: screen;
-}
-
-.mobile-hero__distressed-type::after {
   color: transparent;
-  -webkit-text-stroke: 1px rgba(0,0,0,0.12);
-  background:
-    radial-gradient(circle at 12% 18%, transparent 0 1.4px, rgba(0,0,0,0.34) 1.8px 2.8px, transparent 3.2px),
-    radial-gradient(circle at 72% 52%, transparent 0 1.2px, rgba(255,244,199,0.22) 1.7px 2.6px, transparent 3px),
-    repeating-linear-gradient(99deg, transparent 0 11px, rgba(0,0,0,0.18) 11.5px 12.8px, transparent 13.5px 25px),
-    linear-gradient(var(--headline-color), var(--headline-color));
-  background-size: 20px 22px, 17px 19px, 100% 100%, 100% 100%;
-  background-position: 0 0, 8px 5px, center, center;
   -webkit-background-clip: text;
   background-clip: text;
-  opacity: 0.55;
+  background-image:
+    radial-gradient(ellipse at 18% 22%, rgba(255,255,255,0.22) 0%, transparent 48%),
+    radial-gradient(ellipse at 82% 78%, rgba(0,0,0,0.36) 0%, transparent 52%),
+    radial-gradient(ellipse at 52% 8%,  rgba(255,255,255,0.13) 0%, transparent 38%),
+    linear-gradient(var(--headline-color), var(--headline-color));
+  -webkit-text-fill-color: transparent;
+  opacity: 0.56;
   mix-blend-mode: overlay;
 }
 
+/* ─── Atmosphere — z-8: above text, embeds it into scene ─── */
+.mobile-hero__atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.mobile-hero__fog-deep {
+  position: absolute;
+  left: -15%;
+  bottom: 10%;
+  width: 130%;
+  height: 54%;
+  background: radial-gradient(ellipse at 50% 70%, rgba(0,0,0,0.46) 0%, rgba(0,0,0,0.2) 36%, transparent 68%);
+  mix-blend-mode: multiply;
+  filter: blur(24px);
+}
+
+.mobile-hero__light-shaft {
+  position: absolute;
+  top: -18%;
+  right: -15%;
+  width: 72%;
+  height: 80%;
+  background: linear-gradient(140deg, rgba(255,210,148,0.10) 0%, rgba(255,172,96,0.04) 38%, transparent 62%);
+  mix-blend-mode: screen;
+  filter: blur(40px);
+  transform: rotate(-8deg) translateZ(0);
+}
+
+/* Product bloom halo — z-9 */
+.mobile-hero__bloom {
+  position: absolute;
+  z-index: 9;
+  left: 0; right: 0;
+  height: 44%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.48;
+}
+
+[data-slide="shilajit"] .mobile-hero__bloom {
+  background: radial-gradient(ellipse at 48% 85%, rgba(172,102,38,0.32) 0%, rgba(108,60,16,0.12) 44%, transparent 72%);
+}
+[data-slide="saffron"] .mobile-hero__bloom {
+  background: radial-gradient(ellipse at 45% 90%, rgba(192,36,26,0.34) 0%, rgba(118,16,10,0.14) 42%, transparent 70%);
+}
+[data-slide="honey"] .mobile-hero__bloom {
+  background: radial-gradient(ellipse at 50% 88%, rgba(188,120,14,0.30) 0%, rgba(126,68,6,0.12) 44%, transparent 72%);
+}
+
+/* Contact shadow at product base */
+.mobile-hero__contact-shadow {
+  position: absolute;
+  z-index: 12;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.76) 0%, rgba(0,0,0,0.28) 52%, transparent 80%);
+  filter: blur(10px);
+  pointer-events: none;
+  transform: scaleY(0.35) translateZ(0);
+}
+
+/* ─── Product — z-13: in FRONT of text ───────────────────── */
 .mobile-hero__product {
   position: absolute;
   z-index: 13;
   height: auto;
   opacity: 0;
-  transform: translateY(26px) scale(0.96);
-  transition: opacity 620ms ease, transform 760ms cubic-bezier(.16,.84,.25,1);
-  pointer-events: none;
-}
-
-.mobile-hero__slide[data-active="true"] .mobile-hero__product {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  will-change: transform, opacity;
+  filter: drop-shadow(0 26px 44px rgba(0,0,0,0.60)) drop-shadow(0 8px 16px rgba(0,0,0,0.42));
 }
 
 .mobile-hero__preload {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 1px; height: 1px;
   opacity: 0;
   pointer-events: none;
 }
 
+/* ─── Effect particles — z-10 ────────────────────────────── */
 .mobile-hero__effects {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 10;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 420ms ease;
+  transition: opacity 480ms ease;
 }
 
-.mobile-hero__effects[data-active="true"] {
-  opacity: 1;
-}
+.mobile-hero__effects[data-active="true"] { opacity: 1; }
 
 .mobile-hero__smoke-wisp {
   position: absolute;
-  height: 86px;
+  height: 80px;
   border-radius: 999px;
-  background: radial-gradient(ellipse at center, rgba(209,173,132,0.22), rgba(91,62,43,0.12) 42%, transparent 72%);
-  transform: translateY(24px) scale(0.8);
-  animation: mobileSmokeLift 4100ms ease-in-out infinite;
+  background: radial-gradient(ellipse at center, rgba(195,158,112,0.18), rgba(78,50,30,0.08) 44%, transparent 72%);
+  animation: mobileSmokeLift 4600ms ease-in-out infinite;
 }
 
 .mobile-hero__rock-dust {
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 4px; height: 4px;
   border-radius: 50%;
-  background: rgba(220,168,111,0.72);
-  animation: mobileDustFloat 2900ms ease-in-out infinite;
+  background: rgba(205,155,95,0.62);
+  animation: mobileDustFloat 3200ms ease-in-out infinite;
 }
 
 .mobile-hero__red-droplet {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 25%, rgba(255,210,210,0.95), rgba(212,38,28,0.88) 48%, rgba(92,0,0,0.42));
-  box-shadow: 0 0 18px rgba(230,43,32,0.42);
-  animation: mobileDropletFloat 3200ms ease-in-out infinite;
+  background: radial-gradient(circle at 35% 25%, rgba(255,200,195,0.92), rgba(200,32,22,0.84) 48%, rgba(80,0,0,0.42));
+  box-shadow: 0 0 12px rgba(215,35,25,0.35);
+  animation: mobileDropletFloat 3600ms ease-in-out infinite;
 }
 
 .mobile-hero__saffron-sheen {
   position: absolute;
-  left: -10%;
-  top: 19%;
-  width: 120%;
-  height: 23%;
-  transform: rotate(-10deg);
-  background: linear-gradient(90deg, transparent, rgba(255,160,130,0.15), transparent);
-  animation: mobileSheenSweep 3800ms ease-in-out infinite;
+  left: -10%; top: 19%;
+  width: 120%; height: 22%;
+  transform: rotate(-10deg) translateZ(0);
+  background: linear-gradient(90deg, transparent, rgba(255,152,120,0.11), transparent);
+  animation: mobileSheenSweep 4400ms ease-in-out infinite;
 }
 
 .mobile-hero__honey-drop {
   position: absolute;
-  width: 17px;
-  height: 23px;
+  width: 16px; height: 22px;
   border-radius: 55% 55% 58% 58%;
-  background: radial-gradient(circle at 36% 25%, rgba(255,244,185,0.9), rgba(211,126,13,0.82) 44%, rgba(109,49,0,0.5));
-  box-shadow: 0 0 18px rgba(239,166,48,0.46);
-  animation: mobileHoneyDrip 3900ms ease-in-out infinite;
+  background: radial-gradient(circle at 36% 25%, rgba(255,240,175,0.88), rgba(198,115,8,0.76) 44%, rgba(95,42,0,0.5));
+  box-shadow: 0 0 14px rgba(225,152,36,0.40);
+  animation: mobileHoneyDrip 4200ms ease-in-out infinite;
 }
 
 .mobile-hero__honey-wave {
   position: absolute;
-  left: 14%;
-  top: 37.7%;
-  width: 72%;
-  height: 72px;
+  left: 14%; top: 37.7%;
+  width: 72%; height: 64px;
   border-radius: 50%;
-  border-top: 2px solid rgba(255,215,133,0.28);
-  animation: mobileHoneyWave 3300ms ease-in-out infinite;
+  border-top: 2px solid rgba(245,200,115,0.20);
+  animation: mobileHoneyWave 3600ms ease-in-out infinite;
 }
 
+/* ─── HUD callout lines — z-11 ───────────────────────────── */
 .mobile-hero__callout-lines {
   position: absolute;
   inset: 0;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
+  z-index: 11;
+  width: 100%; height: 100%;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 500ms ease 450ms;
 }
 
-.mobile-hero__callout-lines[data-active="true"] {
-  opacity: 1;
-}
+.mobile-hero__callout-lines[data-active="true"] { opacity: 1; }
 
 .mobile-hero__callout-lines path {
-  stroke-dasharray: 170;
-  stroke-dashoffset: 170;
-  transition: stroke-dashoffset 900ms cubic-bezier(.16,.84,.25,1);
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
 }
 
-.mobile-hero__callout-lines[data-active="true"] path {
-  stroke-dashoffset: 0;
-}
-
+/* ─── Feature chips — z-18 ───────────────────────────────── */
 .mobile-hero__feature {
   position: absolute;
   z-index: 18;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 32%;
-  max-width: 45%;
+  gap: 7px;
+  min-width: 32%; max-width: 46%;
   min-height: 5%;
-  padding: 0.77% 3.08% 0.77% 1.8%;
+  padding: 0.72% 3% 0.72% 1.6%;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(26,21,18,0.96), rgba(7,6,5,0.9));
-  border: 1.2px solid rgba(255,255,255,0.88);
-  box-shadow: 0 13px 26px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.16);
-  transition:
-    opacity 520ms ease,
-    transform 760ms cubic-bezier(.12,.92,.2,1.08);
+  background: linear-gradient(180deg, rgba(22,18,14,0.97), rgba(5,4,3,0.93));
+  border: 1px solid rgba(255,255,255,0.82);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.12);
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
 .mobile-hero__feature-number {
-  width: 6.67cqw;
-  height: 6.67cqw;
+  width: 6.5cqw; height: 6.5cqw;
   border-radius: 50%;
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f5ef;
-  color: #090705;
+  background: #f5f0e8;
+  color: #080603;
   font-family: var(--font-headline, ui-sans-serif, system-ui, sans-serif);
-  font-size: 3.08cqw;
+  font-size: 3cqw;
   font-weight: 800;
 }
 
 .mobile-hero__feature-copy {
-  color: #fffaf2;
+  color: #faf6ee;
   font-family: var(--font-sans, Manrope, sans-serif);
-  font-size: clamp(10px, 3.2cqw, 12.5px);
+  font-size: clamp(10px, 3.1cqw, 12px);
   font-weight: 800;
   line-height: 1.08;
-  letter-spacing: 0;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.72);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.72);
   min-width: 0;
 }
 
@@ -306,18 +423,10 @@
   text-overflow: clip;
 }
 
-.mobile-hero__kinetic-word {
-  display: inline-block;
-  margin-right: 3px;
-  transform-origin: 0% 70%;
-  will-change: transform, opacity;
-}
-
+/* ─── Progress — z-32 ────────────────────────────────────── */
 .mobile-hero__progress {
   position: absolute;
-  top: 74px;
-  left: 16px;
-  right: 16px;
+  top: 72px; left: 16px; right: 16px;
   z-index: 32;
   display: flex;
   gap: 5px;
@@ -329,21 +438,21 @@
   height: 2px;
   border-radius: 99px;
   overflow: hidden;
-  background: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.22);
 }
 
 .mobile-hero__progress-fill {
   display: block;
   height: 100%;
   width: 0;
-  background: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.88);
 }
 
+/* ─── Bottom nav — z-34 ──────────────────────────────────── */
 .mobile-hero__bottom-nav {
   position: absolute;
   bottom: max(18px, env(safe-area-inset-bottom));
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   z-index: 34;
   display: flex;
   align-items: center;
@@ -352,39 +461,24 @@
 }
 
 .mobile-hero__round-btn {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  background: rgba(255, 252, 245, 0.10);
-  backdrop-filter: blur(20px) saturate(1.8) brightness(1.05);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8) brightness(1.05);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #ffffff;
+  background: rgba(255,252,245,0.09);
+  backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
+  -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
+  border: 1px solid rgba(255,255,255,0.24);
+  color: #fff;
   cursor: pointer;
-  font-family: var(--font-sans, Manrope, sans-serif);
-  font-size: 24px;
-  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-    0 4px 20px rgba(0, 0, 0, 0.22);
-  transition: background 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), 0 4px 18px rgba(0,0,0,0.26);
+  transition: background 0.18s ease;
 }
 
-.mobile-hero__round-btn:active {
-  background: rgba(255, 252, 245, 0.18);
-  transform: scale(0.94);
-}
-
-.mobile-hero__chevron-icon {
-  width: 22px;
-  height: 22px;
-  display: block;
-}
+.mobile-hero__round-btn:active { background: rgba(255,252,245,0.18); transform: scale(0.94); }
+.mobile-hero__chevron-icon { width: 22px; height: 22px; display: block; }
 
 .mobile-hero__shop-btn {
   flex: 1;
@@ -393,98 +487,86 @@
   margin: 0 10px;
   border-radius: 999px;
   cursor: pointer;
-  background: rgba(255, 252, 245, 0.13);
-  backdrop-filter: blur(28px) saturate(2.2) brightness(1.12);
-  -webkit-backdrop-filter: blur(28px) saturate(2.2) brightness(1.12);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  color: #ffffff;
+  background: rgba(255,252,245,0.11);
+  backdrop-filter: blur(28px) saturate(2.2) brightness(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(2.2) brightness(1.1);
+  border: 1px solid rgba(255,255,255,0.30);
+  color: #fff;
   font-family: var(--font-sans, Manrope, sans-serif);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.50),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-    0 8px 32px rgba(0, 0, 0, 0.26),
-    0 0 0 1px rgba(255, 255, 255, 0.08);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    inset 0 1.5px 0 rgba(255,255,255,0.44),
+    0 8px 30px rgba(0,0,0,0.26),
+    0 0 0 1px rgba(255,255,255,0.06);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.mobile-hero__shop-btn:active {
-  background: rgba(255, 252, 245, 0.22);
-  transform: scale(0.97);
-}
-
-.mobile-hero__shop-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
+.mobile-hero__shop-btn:active   { background: rgba(255,252,245,0.2); transform: scale(0.97); }
+.mobile-hero__shop-btn:disabled { cursor: not-allowed; opacity: 0.55; }
 
 @media (max-width: 390px) {
-  .mobile-hero__feature {
-    padding-right: 10px;
-  }
-
-  .mobile-hero__shop-btn {
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    height: 44px;
-  }
+  .mobile-hero__feature  { padding-right: 10px; }
+  .mobile-hero__shop-btn { font-size: 10px; letter-spacing: 0.14em; height: 44px; }
 }
 
 @media (max-width: 880px) {
-  .mobile-hero {
-    display: block;
+  .mobile-hero { display: block; }
+}
+
+/* ─── Reduced motion — disable all expensive effects ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-hero__grain,
+  .mobile-hero__effects,
+  .mobile-hero__fog-deep,
+  .mobile-hero__light-shaft,
+  .mobile-hero__bloom { display: none; }
+
+  .mobile-hero__background {
+    transition: none !important;
   }
+
+  .mobile-hero__slide { transition: opacity 200ms ease; }
 }
 
-@keyframes mobileHeadlineRise {
-  from { transform: translateY(112%) skewY(4deg); opacity: 0; }
-  to { transform: translateY(0) skewY(0); opacity: 1; }
-}
-
-@keyframes mobileWordPop {
-  0% { transform: translate3d(-8px, 12px, 0) scale(0.78) rotate(-3deg); opacity: 0; }
-  62% { transform: translate3d(1px, -2px, 0) scale(1.08) rotate(1deg); opacity: 1; }
-  100% { transform: translate3d(0,0,0) scale(1) rotate(0); opacity: 1; }
-}
-
+/* ─── Particle keyframes ─────────────────────────────────── */
 @keyframes mobileSmokeLift {
-  0% { transform: translateY(26px) translateX(-8px) scale(0.78); opacity: 0; }
-  30% { opacity: 0.72; }
-  100% { transform: translateY(-24px) translateX(18px) scale(1.14); opacity: 0; }
+  0%   { transform: translateY(26px) translateX(-8px) scale(0.78) translateZ(0); opacity: 0; }
+  28%  { opacity: 0.62; }
+  100% { transform: translateY(-28px) translateX(20px) scale(1.16) translateZ(0); opacity: 0; }
 }
 
 @keyframes mobileDustFloat {
-  0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.28; }
-  45% { transform: translateY(-22px) scale(1.15); opacity: 0.88; }
+  0%, 100% { transform: translateY(0) scale(0.8) translateZ(0); opacity: 0.22; }
+  45%       { transform: translateY(-22px) scale(1.16) translateZ(0); opacity: 0.80; }
 }
 
 @keyframes mobileDropletFloat {
-  0%, 100% { transform: translateY(0) scale(0.9); opacity: 0.5; }
-  50% { transform: translateY(-30px) scale(1.08); opacity: 0.95; }
+  0%, 100% { transform: translateY(0) scale(0.9) translateZ(0); opacity: 0.42; }
+  50%       { transform: translateY(-30px) scale(1.08) translateZ(0); opacity: 0.90; }
 }
 
 @keyframes mobileSheenSweep {
-  0% { transform: translateX(-35%) rotate(-10deg); opacity: 0; }
-  45% { opacity: 1; }
-  100% { transform: translateX(35%) rotate(-10deg); opacity: 0; }
+  0%   { transform: translateX(-38%) rotate(-10deg) translateZ(0); opacity: 0; }
+  45%  { opacity: 1; }
+  100% { transform: translateX(38%) rotate(-10deg) translateZ(0); opacity: 0; }
 }
 
 @keyframes mobileHoneyDrip {
-  0% { transform: translateY(-10px) scaleY(0.86); opacity: 0; }
-  30% { opacity: 0.9; }
-  100% { transform: translateY(46px) scaleY(1.14); opacity: 0; }
+  0%   { transform: translateY(-12px) scaleY(0.84) translateZ(0); opacity: 0; }
+  28%  { opacity: 0.85; }
+  100% { transform: translateY(48px) scaleY(1.14) translateZ(0); opacity: 0; }
 }
 
 @keyframes mobileHoneyWave {
-  0%, 100% { transform: translateY(0) scaleX(0.88); opacity: 0.18; }
-  50% { transform: translateY(-8px) scaleX(1.08); opacity: 0.55; }
+  0%, 100% { transform: translateY(0) scaleX(0.88) translateZ(0); opacity: 0.15; }
+  50%       { transform: translateY(-8px) scaleX(1.08) translateZ(0); opacity: 0.50; }
 }
 
 @keyframes mobileHeroProgress {
   from { width: 0; }
-  to { width: 100%; }
+  to   { width: 100%; }
 }
