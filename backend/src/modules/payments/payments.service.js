@@ -115,6 +115,33 @@ async function verifyPayment({ orderId, razorpayOrderId, razorpayPaymentId, razo
   const db = require('../../integrations/database/supabase-admin').getSupabaseAdminClient();
   await db.from('orders').update({ status: 'confirmed' }).eq('id', orderId);
 
+  // Send confirmation emails after payment is verified
+  const orderData = await getOrderById(orderId);
+  if (orderData) {
+    const { sendOrderConfirmation, sendAdminOrderAlert } = require('../notifications/notifications.service');
+    const addr = orderData.shipping_address || {};
+    const shippingAddress = {
+      full_name: addr.full_name,
+      line1: addr.line_1,
+      line2: addr.line_2,
+      city: addr.city,
+      state: addr.state,
+      postalCode: addr.postal_code,
+      country: addr.country
+    };
+    const items = (orderData.order_items || []).map(i => ({
+      productName: i.product_name,
+      quantity: i.quantity,
+      unitPrice: Number(i.unit_price),
+      subtotal: Number(i.subtotal)
+    }));
+    const invoiceUrl = `${env.app.storefrontUrl}/order-success/${orderId}`;
+    Promise.allSettled([
+      sendOrderConfirmation({ to: orderData.customer_email, orderNumber: orderData.order_number, total: Number(orderData.total), items, invoiceUrl }),
+      sendAdminOrderAlert({ order: orderData, items, customerEmail: orderData.customer_email, customerPhone: orderData.customer_phone, shippingAddress, total: Number(orderData.total) })
+    ]).catch(() => {});
+  }
+
   return { payment, verified: true };
 }
 

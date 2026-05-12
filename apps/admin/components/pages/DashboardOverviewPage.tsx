@@ -7,6 +7,7 @@ import {
   useGetAdminOrderMetricsQuery,
   useGetAdminProductMetricsQuery,
   useGetAdminRevenueMetricsQuery,
+  useGetAnalyticsTimelineQuery,
 } from '@/lib/store/services/admin-api';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Btn } from '@/components/ui/Btn';
@@ -62,19 +63,22 @@ export function DashboardOverviewPage() {
   const { data: revenueMetrics } = useGetAdminRevenueMetricsQuery(queryParams);
   const { data: orderMetrics } = useGetAdminOrderMetricsQuery(queryParams);
   const { data: productMetrics } = useGetAdminProductMetricsQuery({ ...queryParams, limit: 6 });
+  const { data: analyticsTimeline } = useGetAnalyticsTimelineQuery(queryParams);
 
   const totalRevenue = revenueMetrics?.totalRevenue ?? dashboard?.revenue ?? 0;
   const totalOrders = dashboard?.totalOrders ?? orderMetrics?.total ?? 0;
   const avgOrder = revenueMetrics?.averageOrderValue ?? 0;
   const lowStock = dashboard?.lowStockCount ?? 0;
 
-  // Build a synthetic revenue series from available data for the chart
+  // Build revenue series from real timeline data for the chart
   const revenueSeries = useMemo(() => {
-    // Fallback: generate a plausible series around the total
+    if (analyticsTimeline?.timeline && analyticsTimeline.timeline.length > 0) {
+      return analyticsTimeline.timeline.map(b => b.revenue);
+    }
+    // Fallback to flat line if no timeline data yet
     const days = timeframe === 'daily' ? 1 : timeframe === 'weekly' ? 7 : 30;
-    const avg = totalRevenue / Math.max(days, 1);
-    return Array.from({ length: days }, (_, i) => Math.max(0, avg * (0.6 + Math.random() * 0.8)));
-  }, [totalRevenue, timeframe]);
+    return Array.from({ length: days }, () => totalRevenue / Math.max(days, 1));
+  }, [analyticsTimeline, totalRevenue, timeframe]);
 
   const stats = [
     { label: `Revenue · ${timeframe === 'daily' ? '1d' : timeframe === 'weekly' ? '7d' : '30d'}`, value: currency(totalRevenue), delta: revenueMetrics?.orderCount ? `${revenueMetrics.orderCount} orders` : '—', positive: true, sub: 'vs prev. period' },

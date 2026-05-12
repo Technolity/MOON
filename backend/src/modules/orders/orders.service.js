@@ -3,7 +3,6 @@ const { findProductsByIds } = require('../products/products.repository');
 const { calculateShipping } = require('../shipping/shipping.service');
 const { validateDiscount } = require('../discounts/discounts.service');
 const ordersRepository = require('./orders.repository');
-const { sendOrderConfirmation, sendAdminOrderAlert } = require('../notifications/notifications.service');
 
 function generateOrderNumber() {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -96,12 +95,6 @@ async function createOrder({ user, input }) {
   // 7. Reserve inventory (best-effort)
   await ordersRepository.reserveInventory(lineItems);
 
-  // 8. Fire-and-forget emails — never block order creation on email delivery
-  Promise.allSettled([
-    sendAdminOrderAlert({ order, items: lineItems, customerEmail, customerPhone, shippingAddress, total }),
-    sendOrderConfirmation({ to: customerEmail, orderNumber: order.order_number, total, items: lineItems })
-  ]).catch(() => {});
-
   return { ...order, items: lineItems, shippingCost: effectiveShipping, subtotal, total };
 }
 
@@ -125,7 +118,16 @@ async function listOrders({ user }) {
 async function updateStatus({ params, input }) {
   const order = await ordersRepository.getOrderById(params.id);
   if (!order) throw new ApiError(404, 'Order not found.');
-  return ordersRepository.updateStatus(params.id, input);
+  const updated = await ordersRepository.updateStatus(params.id, input);
+  if (input.status === 'shipped' && order.customer_email) {
+    const { sendShippingNotification } = require('../notifications/notifications.service');
+    sendShippingNotification({
+      orderNumber: order.order_number,
+      customerEmail: order.customer_email,
+      trackingNumber: input.trackingNumber || null
+    }).catch(() => {});
+  }
+  return updated;
 }
 
 async function cancelOrder({ params }) {

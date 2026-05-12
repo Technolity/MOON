@@ -18,20 +18,33 @@ async function sendEmail({ to, subject, html, text }) {
   return { id: data.id, to, subject };
 }
 
-async function sendOrderConfirmation({ to, orderNumber, total, items }) {
+async function sendOrderConfirmation({ to, orderNumber, total, items, invoiceUrl }) {
   const itemList = items
-    .map(i => `<li>${i.productName} × ${i.quantity} — ₹${i.subtotal.toFixed(2)}</li>`)
+    .map(i => `<li style="margin-bottom:6px">${i.productName} × ${i.quantity} — ₹${i.subtotal.toFixed(2)}</li>`)
     .join('');
+
+  const invoiceBtn = invoiceUrl
+    ? `<p style="margin-top:20px">
+        <a href="${invoiceUrl}" style="display:inline-block;background:#D2571B;color:#fff;padding:10px 24px;border-radius:4px;text-decoration:none;font-weight:bold;font-family:sans-serif">
+          Download Invoice →
+        </a>
+       </p>`
+    : '';
 
   return sendEmail({
     to,
-    subject: `Order Confirmed: ${orderNumber}`,
+    subject: `Payment Confirmed: ${orderNumber}`,
     html: `
-      <h2>Thank you for your order!</h2>
-      <p>Order <strong>${orderNumber}</strong> has been confirmed.</p>
-      <ul>${itemList}</ul>
-      <p><strong>Total: ₹${total.toFixed(2)}</strong></p>
-      <p>We will notify you once your order is shipped.</p>
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#FAF6EF;padding:32px">
+        <h2 style="color:#D2571B;margin-top:0">Your order is confirmed!</h2>
+        <p>Thank you for your payment. Order <strong>${orderNumber}</strong> is confirmed and being prepared for dispatch.</p>
+        <ul style="padding-left:20px;line-height:1.8">${itemList}</ul>
+        <p style="font-size:18px;font-weight:bold;margin-top:16px">Total paid: ₹${total.toFixed(2)}</p>
+        <p style="color:#5f5447">We will send you a shipping update once your order is on the way (estimated 3–7 business days).</p>
+        ${invoiceBtn}
+        <hr style="border:none;border-top:1px solid #e8ddd0;margin:24px 0">
+        <p style="color:#aaa;font-size:12px;text-align:center">MOON Premium Himalayan Products · support@moonbrand.com</p>
+      </div>
     `
   });
 }
