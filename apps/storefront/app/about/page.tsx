@@ -1,5 +1,33 @@
 import type { Metadata } from 'next';
 
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'MOON Naturally Yours',
+  description: 'Premium single-origin Kashmiri wellness products — saffron, shilajit, honey, dry fruits and ghee, sourced directly from farmers in the Kashmir Valley.',
+  url: 'https://www.moonnaturallyyours.com',
+  email: 'hello@moonnaturallyyours.com',
+  telephone: '+91-6005099213',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Kanispora',
+    addressLocality: 'Baramulla',
+    addressRegion: 'Jammu & Kashmir',
+    postalCode: '193101',
+    addressCountry: 'IN',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 34.1979,
+    longitude: 74.3411,
+  },
+  sameAs: [
+    'https://www.instagram.com/moonnaturallyyours/',
+    'https://x.com/moonnaturallyyours',
+    'https://www.youtube.com/@moonnaturallyyours',
+  ],
+};
+
 export const metadata: Metadata = {
   title: "About Us | MOON Naturally Yours — Kashmir's Finest Natural Products",
   description:
@@ -16,7 +44,12 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main style={{ fontFamily: "'Manrope', ui-sans-serif, system-ui, sans-serif" }}>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema).replace(/</g, '\\u003c') }}
+      />
+      <main style={{ fontFamily: "'Manrope', ui-sans-serif, system-ui, sans-serif" }}>
 
       {/* ── Section 1: Hero ─────────────────────────────────────────── */}
       <section
@@ -553,5 +586,6 @@ export default function AboutPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

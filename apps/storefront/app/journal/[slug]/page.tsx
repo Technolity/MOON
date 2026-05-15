@@ -48,6 +48,39 @@ export default async function JournalPostPage({
 
   return (
     <main style={{ backgroundColor: '#FAF6EF', minHeight: '100vh' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: post.title,
+            description: post.excerpt,
+            datePublished: post.date,
+            dateModified: post.date,
+            author: {
+              '@type': 'Organization',
+              name: 'MOON Naturally Yours',
+              url: 'https://www.moonnaturallyyours.com',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'MOON Naturally Yours',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://www.moonnaturallyyours.com/og/og-homepage.jpg',
+              },
+            },
+            url: `https://www.moonnaturallyyours.com/journal/${post.slug}`,
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://www.moonnaturallyyours.com/journal/${post.slug}`,
+            },
+            keywords: post.keywords.join(', '),
+            articleSection: post.category,
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
       {/* Prose Styles */}
       <style>{`
         .moon-prose h2 {

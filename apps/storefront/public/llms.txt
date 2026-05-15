@@ -1,36 +1,33 @@
 # MOON Naturally Yours
+> Premium single-origin Kashmiri wellness products — Shilajit, Saffron, Honey, Dry Fruits, and Ghee. Sourced directly from farmers in Jammu & Kashmir, India. Ships across India. Contact: hello@moonnaturallyyours.com
 
-MOON Naturally Yours is an Indian wellness e-commerce brand selling premium single-origin products sourced from Kashmir and the Himalayas. Products include Kashmiri Saffron (Mongra A++ grade), Himalayan Shilajit (gold grade), Kashmiri Honey (raw, wild mountain), Irani Saffron (Negin grade), Kashmiri Almonds, Kashmiri Walnuts, and Kashmiri Bilona Ghee. Ships across India. Website: https://www.moonnaturallyyours.com
+## Core Pages
+- [Home](https://www.moonnaturallyyours.com/): Premium Kashmiri wellness storefront with 7 single-origin products.
+- [About](https://www.moonnaturallyyours.com/about): Brand story, founder background from Baramulla, and sourcing philosophy from Kashmir Valley.
+- [FAQs](https://www.moonnaturallyyours.com/faqs): 15 detailed answers on product authenticity, quality testing, storage, delivery, and returns.
+- [Journal](https://www.moonnaturallyyours.com/journal): Educational articles on Kashmiri saffron, Himalayan Shilajit, raw honey, walnuts, and ghee.
 
 ## Products
+- [Himalayan Shilajit](https://www.moonnaturallyyours.com/products/shilajit): Gold grade resin from Zanskar Ridge above 16,000 ft. 70%+ fulvic acid, 84+ trace minerals. Third-party lab tested. ₹1,999.
+- [Kashmiri Saffron (Mongra A++)](https://www.moonnaturallyyours.com/products/kashmiri-saffron): ISO Grade 1, hand-harvested from Pampore — India's only GI-tagged saffron region. Deep red stigmas, no yellow style. ₹1,250.
+- [Kashmiri Honey](https://www.moonnaturallyyours.com/products/kashmiri-honey): Raw, unfiltered, cold-extracted from high-altitude deodar forests in Pahalgam. Enzyme-rich, naturally crystallising. ₹1,150.
+- [Irani Saffron (Negin Grade)](https://www.moonnaturallyyours.com/products/irani-saffron): Whole Negin-grade Iranian saffron threads. Balanced flavour for everyday use. ₹1,050.
+- [Kashmiri Almonds](https://www.moonnaturallyyours.com/products/kashmiri-almonds): Premium whole kernels from Kashmir valley orchards. Unroasted, unsalted, rich in vitamin E. ₹899.
+- [Kashmiri Walnuts](https://www.moonnaturallyyours.com/products/kashmiri-walnuts): Fresh-crop orchard select walnuts. High in omega-3 fatty acids. ₹950.
+- [Kashmiri Ghee](https://www.moonnaturallyyours.com/products/kashmiri-ghee): Small-batch bilona-method clarified butter. Traditional A2 preparation. ₹1,350.
 
-### Himalayan Shilajit — Gold Grade (₹1,999)
-A mineral-rich resin exudate collected from Himalayan rocks at elevations above 16,000 feet. Rich in fulvic acid and over 84 trace minerals. Third-party lab tested for purity and heavy metals. Traditionally used in Ayurvedic medicine for stamina, vitality, mental clarity, and recovery. MOON Shilajit is purified for potency and free from additives. Suitable for daily use — typically 300–500mg dissolved in warm water or milk.
+## Journal Articles
+- [Kashmir's Red Gold: The Complete Guide to Genuine Saffron](https://www.moonnaturallyyours.com/journal/kashmirs-red-gold-guide-to-genuine-saffron): How to identify genuine Kashmiri saffron vs imitations — ISO grades, home tests, health benefits, storage.
+- [Shilajit: The Himalayan Mountain Resin That Ancient Healers Swore By](https://www.moonnaturallyyours.com/journal/shilajit-himalayan-resin-ancient-healer): What modern science says about Shilajit — fulvic acid, minerals, clinical studies, Ayurvedic use.
+- [From Hive to Table: The Untold Story of Raw Kashmiri Honey](https://www.moonnaturallyyours.com/journal/raw-kashmiri-honey-hive-to-table): Traditional beekeeping in Pahalgam, cold extraction methods, why raw honey crystallises.
+- [Why Kashmiri Walnuts Are in a League of Their Own](https://www.moonnaturallyyours.com/journal/kashmiri-walnuts-superfood-from-the-valley): Thin-shell Kashmiri walnuts vs standard varieties — omega-3 content, harvest, nutrition.
+- [The Ancient Art of Kashmiri Ghee: How MOON Makes It Differently](https://www.moonnaturallyyours.com/journal/moon-kashmiri-ghee-artisan-process): Bilona process explained, A2 fat structure, butyric acid, traditional preparation methods.
 
-### Kashmiri Saffron — Mongra A++ Grade (₹1,250)
-Sourced exclusively from Pampore, Kashmir's primary saffron-growing region and the only GI-tagged saffron-producing area in India. Mongra is the highest quality classification of Kashmiri saffron, defined by deep red stigmas with no yellow style (stigma base) attached. Hand-sorted at harvest by local farmers and sun-dried without artificial heating. Tested for colour strength (crocin), flavour (picrocrocin), and aroma (safranal). Used in traditional kesar doodh (saffron milk), Mughlai cuisine, and wellness preparations.
-
-### Kashmiri Honey — Wild Mountain Raw (₹1,150)
-Unfiltered raw honey harvested from high-altitude Kashmir meadows between 2,000–3,500 metres elevation. Wild-sourced from Himalayan flora including alpine wildflowers. Free from heating, filtration, or additives — all of which destroy natural enzymes and antioxidants. Enzyme-rich and naturally crystallising in cold months (crystallisation indicates raw, unprocessed honey). Harvested seasonally and stored in food-grade glass jars.
-
-### Irani Saffron — Negin Grade (₹1,050)
-Negin grade Iranian saffron consisting of whole, long saffron threads selected for balanced flavour and strong colour release. Sourced from Iran, the world's largest saffron producer. Suits everyday culinary use, teas, desserts, and rice preparations. Offers a slightly milder aroma profile than Kashmiri Mongra, making it well-suited for daily cooking.
-
-### Kashmiri Almonds — Premium Whole Kernels (₹899)
-Naturally grown almonds from Kashmir valley orchards. Unroasted and unsalted, cleaned and graded for uniform size and crisp texture. Rich in vitamin E, magnesium, and healthy monounsaturated fats. Suitable for direct snacking, soaking overnight, or use in traditional badam milk (almond milk) preparations.
-
-### Kashmiri Walnuts — Orchard Select (₹950)
-Fresh-crop walnuts sourced from Kashmir orchards, available as half and whole kernels. Harvested seasonally and selected for clean, unbroken kernel quality. Naturally high in omega-3 fatty acids (ALA), antioxidants, and polyphenols. Recommended for daily consumption for cardiovascular and cognitive health support.
-
-### Kashmiri Ghee — Bilona Process (₹1,350)
-Small-batch clarified butter prepared using the traditional bilona (hand-churned) method. Made from cultured cream churned in earthen pots, then slow-simmered for a deep, nutty aromatic finish. The bilona process preserves A2 fat structure and naturally occurring butyric acid. Ideal for Ayurvedic cooking, tempering spices, and traditional wellness routines (e.g., morning ghee on warm bread or in herbal preparations).
-
-## Shipping & Ordering
-- Ships across India
-- Estimated delivery: 2–7 days depending on zone (North 2–3 days, South 3–4 days, East 4–5 days, Northeast 5–7 days)
-- Razorpay payment gateway — UPI, cards, net banking accepted
-- Contact: hello@moonnaturallyyours.com
-- Website: https://www.moonnaturallyyours.com
-
-## About the Brand
-MOON Naturally Yours was founded on the principle of making traditionally sourced South Asian wellness products accessible online with the transparency and quality assurance that modern consumers expect. Every product is single-origin, traceable to a specific region, and selected for purity over volume.
+## Key Facts
+- Founded: Kanispora, Baramulla, Jammu & Kashmir — 193101, India
+- All products: single-origin, traceable to named farms or regions
+- Testing: ISO 3632 (saffron), fulvic acid + heavy metals (shilajit), pollen analysis + moisture (honey)
+- Delivery: 2–7 business days across India (standard); express 2–3 days select pin codes
+- Payment: UPI (GPay, PhonePe, Paytm), cards, net banking, Cash on Delivery
+- Contact: hello@moonnaturallyyours.com | WhatsApp: +91-6005099213
+- Not for: international shipping (India only currently)

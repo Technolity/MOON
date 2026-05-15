@@ -4,6 +4,6 @@
   "buildCommand": "cd ../.. && pnpm --filter @moon/storefront build",
   "outputDirectory": ".next",
   "env": {
-    "NEXT_PUBLIC_SITE_URL": "https://moonnaturallyyours.com"
+    "NEXT_PUBLIC_SITE_URL": "https://www.moonnaturallyyours.com"
   }
 }

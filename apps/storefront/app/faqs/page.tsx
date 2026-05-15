@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { FaqsClient } from './FaqsClient';
+import { FAQS } from '@/lib/data/faqs';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions | MOON Naturally Yours',
@@ -15,6 +16,27 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://www.moonnaturallyyours.com/faqs' },
 };
 
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.filter(f => f.category !== 'All').map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
 export default function FaqsPage() {
-  return <FaqsClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c') }}
+      />
+      <FaqsClient />
+    </>
+  );
 }
